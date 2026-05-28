@@ -180,28 +180,76 @@ h1, h2, h3, h4, h5, h6 {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
-  padding: 2rem;
-  max-width: 1400px;
+  padding: 1.5rem;
+  max-width: 100%;
   margin: 0 auto;
+  height: calc(100vh - 65px);
+  overflow: hidden;
 }
 
 @media (min-width: 1024px) {
   .sandbox-container {
-    grid-template-columns: 4.5fr 7.5fr;
+    grid-template-columns: auto 1fr;
+    align-items: start;
   }
 }
 
 /* Mobile Frame Emulator */
 .emulator-wrapper {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 1rem;
+}
+
+.device-toggle-bar {
+  display: flex;
+  background-color: var(--charcoal-900);
+  border: 1px solid var(--charcoal-800);
+  padding: 2px;
+  border-radius: 20px;
+  gap: 2px;
+}
+
+.device-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--charcoal-600);
+  padding: 0.35rem 0.85rem;
+  border-radius: 18px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.device-toggle-btn.active {
+  background-color: var(--oxfam-green);
+  color: #fff;
+}
+
+/* Tablet Device overrides */
+.phone-shell.tablet {
+  width: 540px;
+  height: 720px;
+  border-radius: 24px;
+  flex-shrink: 0;
+}
+
+.phone-shell.tablet .phone-notch {
+  width: 220px;
+  height: 14px;
+}
+
+.phone-shell.tablet .phone-speaker {
+  width: 70px;
 }
 
 .phone-shell {
   position: relative;
-  width: 100%;
-  max-width: 360px;
+  width: 360px;
+  flex-shrink: 0;
   height: 720px;
   background-color: var(--charcoal-900);
   border: 10px solid var(--charcoal-900);
@@ -553,6 +601,54 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(1.3);
 }
 
+/* Dynamic Map Animated Routing Line */
+.map-route-line {
+  stroke-dasharray: 6, 4;
+  animation: routeTravel 3s infinite linear;
+}
+
+@keyframes routeTravel {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.landmark-route-card {
+  background-color: var(--oxfam-green-light);
+  border: 1px solid var(--oxfam-green);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.landmark-route-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
+}
+
+.landmark-route-step:last-child {
+  margin-bottom: 0;
+}
+
+.route-step-number {
+  background-color: var(--oxfam-green-dark);
+  color: #fff;
+  font-weight: 800;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.5rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 .facility-card-info h4 {
   font-size: 0.8rem;
   margin-bottom: 2px;
@@ -872,6 +968,19 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  height: 100%;
+}
+
+@media (min-width: 1200px) {
+  .dashboard-panel-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.75rem; /* Space for scrollbar */
+  }
 }
 
 .bi-dashboard-card {
@@ -880,6 +989,17 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--border-radius-xl);
   padding: 1.5rem;
   box-shadow: var(--box-shadow-soft);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+@media (min-width: 1200px) {
+  .bi-dashboard-card {
+    flex-basis: 720px;
+    flex-shrink: 0;
+  }
 }
 
 .dashboard-title-bar {
@@ -1106,6 +1226,17 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--border-radius-xl);
   padding: 1.25rem;
   box-shadow: var(--box-shadow-soft);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+@media (min-width: 1200px) {
+  .system-controller-card {
+    flex-basis: 480px;
+    flex-shrink: 0;
+  }
 }
 
 .system-controller-card h3 {
@@ -1296,13 +1427,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Footers */
 .app-footer {
-  text-align: center;
-  padding: 2rem;
-  border-top: 1px solid var(--charcoal-200);
-  margin-top: 3rem;
-  font-size: 0.7rem;
-  color: var(--charcoal-600);
-  background-color: #fff;
+  display: none; /* Removed footer to make container fill 100vh exactly */
 }
 
 
@@ -1351,5 +1476,370 @@ h1, h2, h3, h4, h5, h6 {
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+/* Biometric Lock Screen and scan animations */
+.biometric-screen-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  background-color: var(--charcoal-900);
+  color: #fff;
+}
+
+.fingerprint-sensor-box {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 2rem 0;
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s;
+}
+
+.fingerprint-sensor-box:hover {
+  background-color: rgba(61, 148, 60, 0.08);
+  border-color: var(--oxfam-green);
+}
+
+.fingerprint-svg {
+  width: 50px;
+  height: 50px;
+  color: var(--charcoal-600);
+  transition: color 0.3s;
+}
+
+.fingerprint-sensor-box:hover .fingerprint-svg {
+  color: var(--oxfam-green);
+}
+
+.fingerprint-sensor-box.scanning .fingerprint-svg {
+  color: var(--oxfam-green);
+  animation: fingerprintGlow 1s infinite alternate;
+}
+
+.fingerprint-laser-line {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background-color: var(--oxfam-green);
+  opacity: 0;
+  box-shadow: 0 0 8px var(--oxfam-green);
+}
+
+.fingerprint-sensor-box.scanning .fingerprint-laser-line {
+  opacity: 1;
+  animation: laserScan 1.6s infinite ease-in-out;
+}
+
+@keyframes fingerprintGlow {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+@keyframes laserScan {
+  0%, 100% { top: 15px; }
+  50% { top: 85px; }
+}
+
+.setup-progress-dots {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--charcoal-800);
+}
+
+.progress-dot.active {
+  background-color: var(--oxfam-green);
+}
+
+/* Smart Focus Category Capsules */
+.category-capsule-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  padding: 0.6rem 0.4rem;
+  background-color: var(--charcoal-100);
+  border: 1px solid var(--charcoal-200);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--charcoal-800);
+}
+
+.category-capsule-btn:hover {
+  background-color: var(--oxfam-green-light);
+  border-color: var(--oxfam-green-medium);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(120, 190, 32, 0.15);
+}
+
+/* Emergency CCPF 811 Hotline Button */
+.hotline-banner-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.hotline-banner-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.hotline-phone-icon {
+  font-size: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: phoneRingRing 1.5s infinite ease-in-out;
+}
+
+@keyframes phoneRingRing {
+  0%, 100% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(-15deg) scale(1.1); }
+  50% { transform: rotate(15deg) scale(1.1); }
+  75% { transform: rotate(-15deg) scale(1.1); }
+}
+
+/* Myths vs Facts Interactive Flip Card */
+.trivia-flip-card {
+  perspective: 1000px;
+  width: 100%;
+  height: 90px;
+  cursor: pointer;
+}
+
+.trivia-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.trivia-flip-card.flipped .trivia-card-inner {
+  transform: rotateY(180deg);
+}
+
+.trivia-card-front, .trivia-card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: 14px;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: var(--box-shadow-premium);
+  background-color: var(--charcoal-100);
+  border: 1px solid var(--charcoal-200);
+}
+
+.trivia-card-front {
+  z-index: 2;
+  transform: rotateY(0deg);
+}
+
+.trivia-card-back {
+  transform: rotateY(180deg);
+  z-index: 1;
+}
+
+/* Simulated Phone Call Overlay */
+.hotline-call-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 200;
+  animation: fadeInOverlay 0.3s ease-out;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; transform: scale(1.05); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.call-avatar-glowing {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: var(--oxfam-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 0 25px var(--oxfam-green);
+  animation: pulseGlowingCall 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlowingCall {
+  0%, 100% { box-shadow: 0 0 20px rgba(120, 190, 32, 0.6); }
+  50% { box-shadow: 0 0 40px rgba(120, 190, 32, 0.9); }
+}
+
+.end-call-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+  transition: all 0.2s ease;
+  margin: 0 auto;
+}
+
+.end-call-btn:hover {
+  transform: scale(1.1);
+  background-color: #dc2626;
+}
+
+/* Mobile Viewport Responsive Toggles */
+.mobile-nav-toggle-bar {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--charcoal-900);
+  border-bottom: 1px solid var(--charcoal-800);
+  padding: 0.5rem;
+  gap: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.mobile-toggle-pill-btn {
+  flex: 1;
+  max-width: 180px;
+  padding: 0.45rem 1rem;
+  background-color: var(--charcoal-800);
+  border: 1px solid var(--charcoal-700);
+  border-radius: 20px;
+  color: var(--charcoal-300);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.mobile-toggle-pill-btn.active {
+  background-color: var(--oxfam-green);
+  border-color: var(--oxfam-green);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(120, 190, 32, 0.3);
+}
+
+@media (max-width: 768px) {
+  .top-header, .app-footer {
+    display: none !important;
+  }
+  
+  .mobile-nav-toggle-bar {
+    display: flex;
+    height: 50px;
+  }
+  
+  .sandbox-container {
+    padding: 0;
+    gap: 0;
+    height: calc(100vh - 50px);
+    grid-template-columns: 1fr !important;
+    overflow: auto;
+  }
+  
+  .mobile-hidden {
+    display: none !important;
+  }
+  
+  /* Make PWA Simulator go 100% full screen on actual mobile viewports */
+  .emulator-wrapper {
+    width: 100vw;
+    height: calc(100vh - 50px);
+    padding: 0;
+    gap: 0;
+    background-color: var(--charcoal-950);
+  }
+  
+  .device-toggle-bar {
+    display: none !important; /* Hide Phone/Tablet toggle since they are on a real phone */
+  }
+  
+  .phone-shell {
+    width: 100vw !important;
+    height: calc(100vh - 50px) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  
+  .phone-notch {
+    display: none !important; /* Hide mock notch as they are using their actual screen */
+  }
+  
+  .phone-screen {
+    border-radius: 0 !important;
+    height: 100% !important;
+  }
+  
+  .phone-status-bar {
+    display: none !important; /* Hide simulated time & battery bars on actual phones */
+  }
+  
+  /* Make dashboard wrapper fill full screen and scrollable in dashboard view */
+  .dashboard-panel-wrapper {
+    width: 100vw;
+    height: calc(100vh - 50px);
+    overflow-y: auto;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 }

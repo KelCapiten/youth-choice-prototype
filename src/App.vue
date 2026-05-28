@@ -8,6 +8,8 @@ import SystemController from './components/SystemController.vue';
 const isOnline = ref(true);
 const outboxQueue = ref([]);
 const syncTrigger = ref(0);
+const deviceMode = ref('phone'); // phone, tablet
+const mobileTab = ref('pwa'); // pwa, dashboard
 
 // Prepopulated analytics databases (VillageReach base)
 const barrierReports = ref([
@@ -119,15 +121,31 @@ const handlePwaClick = () => {
       </div>
     </header>
 
+    <!-- Mobile Nav Pill Toggler Bar (Shown only on small screens) -->
+    <div class="mobile-nav-toggle-bar">
+      <button @click="mobileTab = 'pwa'" :class="{ active: mobileTab === 'pwa' }" class="mobile-toggle-pill-btn">
+        <span>📱</span> PWA App
+      </button>
+      <button @click="mobileTab = 'dashboard'" :class="{ active: mobileTab === 'dashboard' }" class="mobile-toggle-pill-btn">
+        <span>📊</span> BI Dashboard
+      </button>
+    </div>
+
     <!-- Master Layout Split Pane Grid -->
     <main class="sandbox-container">
       
-      <!-- Column 1: Left Phone frame emulator -->
-      <section class="emulator-wrapper">
+      <!-- Column 1: Left Phone/Tablet frame emulator -->
+      <section class="emulator-wrapper" :class="{ 'mobile-hidden': mobileTab !== 'pwa' }">
+        <div class="device-toggle-bar">
+          <button @click="deviceMode = 'phone'" :class="{ active: deviceMode === 'phone' }" class="device-toggle-btn">Phone</button>
+          <button @click="deviceMode = 'tablet'" :class="{ active: deviceMode === 'tablet' }" class="device-toggle-btn">Tablet</button>
+        </div>
+        
         <MobilePwa 
           :isOnline="isOnline" 
           :outboxQueue="outboxQueue"
           :syncTrigger="syncTrigger"
+          :deviceMode="deviceMode"
           @add-to-outbox="handleAddToOutbox"
           @add-forum="handleAddForum"
           @add-barrier="handleAddBarrier"
@@ -136,7 +154,7 @@ const handlePwaClick = () => {
       </section>
 
       <!-- Column 2: Right BI Dashboard & System Controller console -->
-      <section class="dashboard-panel-wrapper">
+      <section class="dashboard-panel-wrapper" :class="{ 'mobile-hidden': mobileTab !== 'dashboard' }">
         
         <!-- BI Metabase Dashboard panel -->
         <Dashboard 

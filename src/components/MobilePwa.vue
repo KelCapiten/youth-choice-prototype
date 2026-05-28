@@ -13,6 +13,10 @@ const props = defineProps({
   syncTrigger: {
     type: Number,
     default: 0
+  },
+  deviceMode: {
+    type: String,
+    default: 'phone'
   }
 });
 
@@ -24,9 +28,85 @@ const registeredPhone = ref('');
 const registeredDistrict = ref('');
 const currentUser = ref('');
 
+// Extra Tier 2 Onboarding States
+const registeredAge = ref('');
+const registeredPin = ref('');
+const registeredConsent = ref(false);
+const registeringTier2 = ref(false);
+const birthYears = Array.from({ length: 29 }, (_, i) => 2008 - i); // 1980 to 2008 (18+ in 2026)
+
 const activeTab = ref('home'); // home, map, chat, report
 const discreetMode = ref(false);
 const quickExitActive = ref(false);
+
+// Biometric Locks & Scans (Malawian SRHR Confidentiality)
+const isBiometricLocked = ref(true); // Locked initially on app boot
+const isBiometricSetup = ref(false);  // Set to true after enrolling fingerprint
+const isScanning = ref(false);
+const onboardingStep = ref(1); // 1 = Select Mode, 2 = Biometric Enrollment Setup, 3 = Register Form
+
+const startBiometricScan = (targetMode) => {
+  if (isScanning.value) return;
+  isScanning.value = true;
+  
+  setTimeout(() => {
+    isScanning.value = false;
+    if (targetMode === 'setup') {
+      isBiometricSetup.value = true;
+      if (registeringTier2.value) {
+        onboardingTier.value = 2;
+        currentUser.value = "User_" + registeredPhone.value.slice(-4);
+        isBiometricLocked.value = false; // unlock
+        triggerAlert("Welcome to Your Safe Space!", `You're now registered! Your private passcode and finger scan are set up. Welcome: @${currentUser.value}`, "success");
+      } else {
+        onboardingTier.value = 1;
+        // Trigger random anonymous handles
+        const prefixes = ["BalakaStar", "ChamboRunner", "PhalulaChampion", "LilongweYouth", "YaoProtector"];
+        const suffix = Math.floor(Math.random() * 90) + 10;
+        currentUser.value = prefixes[Math.floor(Math.random() * prefixes.length)] + suffix;
+        isBiometricLocked.value = false; // unlock
+        triggerAlert("Secure Lock Active!", `Your safe space is now secure! Your anonymous nickname is @${currentUser.value}. Have fun learning!`, "success");
+      }
+    } else if (targetMode === 'unlock') {
+      isBiometricLocked.value = false;
+      triggerAlert("Privacy Shield Unlocked", `Welcome back @${currentUser.value || 'Explorer'}. Database unlocked successfully.`, "success");
+    }
+  }, 1500);
+};
+
+const handleLockIconClick = () => {
+  isBiometricLocked.value = true;
+  triggerAlert("Sandbox Database Locked", "Simulating app lock-out. Test fingerprint scanner to regain entry.", "info");
+};
+
+// Landing Page Interactive Features
+const mythFlipped = ref(false);
+const isCallingHotline = ref(false);
+const hotlineCallTimer = ref('00:00');
+let callInterval = null;
+
+const startHotlineCall = () => {
+  emit('pwa-click');
+  isCallingHotline.value = true;
+  hotlineCallTimer.value = '00:00';
+  let seconds = 0;
+  if (callInterval) clearInterval(callInterval);
+  callInterval = setInterval(() => {
+    seconds++;
+    const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const secs = String(seconds % 60).padStart(2, '0');
+    hotlineCallTimer.value = `${mins}:${secs}`;
+  }, 1000);
+};
+
+const endHotlineCall = () => {
+  emit('pwa-click');
+  isCallingHotline.value = false;
+  if (callInterval) {
+    clearInterval(callInterval);
+    callInterval = null;
+  }
+};
 
 const selectedDistrict = ref('balaka');
 const selectedTa = ref('kalembo');
@@ -93,25 +173,40 @@ onMounted(() => {
 // Trigger dynamic onboarding pseudonyms
 const handleOnboarding = (tier) => {
   emit('pwa-click');
-  onboardingTier.value = tier;
   if (tier === 1) {
-    const prefixes = ["BalakaStar", "ChamboRunner", "PhalulaChampion", "LilongweYouth", "YaoProtector"];
-    const suffix = Math.floor(Math.random() * 90) + 10;
-    currentUser.value = prefixes[Math.floor(Math.random() * prefixes.length)] + suffix;
-    triggerAlert("Anonymous Privacy On", `Child consent gate bypassed under Section 17 of Malawian DPA. Welcome anonymous explorer: @${currentUser.value}`, 'success');
+    // Under 18 anonymized -> redirect to fingerprint registration setup first
+    onboardingStep.value = 2;
   } else {
-    currentUser.value = "YouthLeaderPlus";
+    // Tier 2 Registered -> goes to registry form
+    onboardingStep.value = 3;
   }
 };
 
 const completeRegisteredOnboarding = () => {
-  if (!registeredPhone.value || !registeredDistrict.value) {
-    triggerAlert("Invalid Fields", "Please specify a phone number and region to secure active SMS access.", "error");
+  if (!registeredPhone.value || !registeredDistrict.value || !registeredAge.value || !registeredPin.value) {
+    triggerAlert("Oops! Missing Info", "Please make sure to fill in your phone number, district, birth year, and 4-digit PIN so we can set up your account.", "error");
     return;
   }
-  currentUser.value = "User_" + registeredPhone.value.slice(-4);
-  onboardingTier.value = 2;
-  triggerAlert("Verified Portal Enabled", `Tier 2 access granted. Fully authorized under Section 16 written consent guidelines. Welcome: @${currentUser.value}`, 'success');
+  if (!registeredConsent.value) {
+    triggerAlert("Safe Space Rules", "Please check the box to agree to our safe privacy rules so we can keep your details secure.", "error");
+    return;
+  }
+  if (!/^\d{4}$/.test(registeredPin.value)) {
+    triggerAlert("Pascode PIN Error", "Please create a passcode that is exactly 4 numbers (like 1234).", "error");
+    return;
+  }
+  // Check age restriction (over 18)
+  const currentYear = new Date().getFullYear();
+  const estimatedAge = currentYear - parseInt(registeredAge.value);
+  if (estimatedAge < 18) {
+    triggerAlert("Use Tier 1 Instead", "This section is for adults. Since you're under 18, please use 'Tier 1' which lets you in instantly and completely anonymously without any phone numbers!", "warning");
+    return;
+  }
+
+  // Set registeringTier2 to true and go to biometric registration setup
+  registeringTier2.value = true;
+  onboardingStep.value = 2; // redirect to biometrics scanner enrollment
+  triggerAlert("Details Checked!", "Great! Your details are ready. Now, let's set up your private finger scan lock to secure your app.", "success");
 };
 
 // Toggle Discreet Mode
@@ -252,7 +347,7 @@ const handleNavClick = (tab) => {
 </script>
 
 <template>
-  <div class="phone-shell" :class="{ 'discreet-active': discreetMode }">
+  <div class="phone-shell" :class="{ 'discreet-active': discreetMode, 'tablet': props.deviceMode === 'tablet' }">
     <!-- Phone Notch Speaker element -->
     <div class="phone-notch">
       <div class="phone-speaker"></div>
@@ -295,7 +390,14 @@ const handleNavClick = (tab) => {
           </div>
         </div>
 
-        <div class="pwa-header-controls" v-if="onboardingTier !== null">
+        <div class="pwa-header-controls" v-if="onboardingTier !== null && !isBiometricLocked">
+          <!-- Lock app manual trigger -->
+          <button @click="handleLockIconClick" class="pwa-icon-btn" title="Simulate Lock Screen">
+            <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+            </svg>
+          </button>
+          
           <!-- Discreet mode toggle -->
           <button @click="triggerDiscreetMode" class="pwa-icon-btn" title="Toggle Discreet Mode">
             <svg style="width:16px; height:16px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -313,71 +415,217 @@ const handleNavClick = (tab) => {
       <div class="pwa-viewport" v-if="!quickExitActive">
         
         <!-- ==========================================
-             SCREEN: ONBOARDING FLOW
+             SCREEN: ONBOARDING FLOW (Not logged in yet)
              ========================================== -->
         <div v-if="onboardingTier === null" class="onboarding-wrap">
-          <div>
-            <h3 style="font-size: 1.4rem; margin-bottom: 0.25rem;">Tikulandirani!</h3>
-            <p style="font-size: 0.75rem; color: var(--charcoal-600);">Welcome to your secure digital safe space for adolescent wellness and guidance.</p>
-          </div>
-
-          <div class="legal-badge">
-            <svg style="width:20px; height:20px; flex-shrink:0;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
+          
+          <!-- STEP 1: Select Onboarding Tier Mode -->
+          <div v-if="onboardingStep === 1" style="display:flex; flex-direction:column; gap:1.25rem; width:100%;">
             <div>
-              <strong style="font-size: 0.7rem; display:block;">Malawi DPA 2024 Legal Shield</strong>
-              <span style="font-size: 0.6rem; line-height: 1.2;">Your privacy is legally protected. Tier 1 requires zero identification or guardian phone verification inputs.</span>
+              <h3 style="font-size: 1.4rem; margin-bottom: 0.25rem;">Ndiwe Olandilidwa!</h3>
+              <p style="font-size: 0.75rem; color: var(--charcoal-600);">Welcome to your secure digital safe space for adolescent wellness and guidance.</p>
+            </div>
+
+            <div class="legal-badge">
+              <svg style="width:20px; height:20px; flex-shrink:0;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+              <div>
+                <strong style="font-size: 0.7rem; display:block;">🔒 100% Private & Safe Space</strong>
+                <span style="font-size: 0.6rem; line-height: 1.2;">We keep your secrets safe! Choosing Tier 1 requires zero real names, no phone numbers, and absolutely no parent signatures.</span>
+              </div>
+            </div>
+
+            <div style="width: 100%; display:flex; flex-direction:column; gap: 0.75rem;">
+              <!-- Tier 1 Select -->
+              <button @click="handleOnboarding(1)" class="onboarding-btn">
+                <h4>Tier 1: 100% Anonymous <span class="badge-tag">Under 18</span></h4>
+                <p>Get in instantly! No real names, no phone number tracking. We give you a fun secure secret nickname.</p>
+              </button>
+
+              <!-- Tier 2 Select -->
+              <button @click="handleOnboarding(2)" class="onboarding-btn">
+                <h4>Tier 2: Registered Access <span class="badge-tag blue">Over 18</span></h4>
+                <p>Get helpful private SMS updates, post on community forums, and track your wellness journey.</p>
+              </button>
             </div>
           </div>
 
-          <div style="width: 100%; display:flex; flex-direction:column; gap: 0.75rem;">
-            <!-- Tier 1 Select -->
-            <button @click="handleOnboarding(1)" class="onboarding-btn">
-              <h4>Tier 1: 100% Anonymous <span class="badge-tag">Under 18</span></h4>
-              <p>Instant access. No real names or contact tracking logs. Autogenerates secure local handles.</p>
-            </button>
+          <!-- STEP 2: Biometric Fingerprint scan registration (Tier 1 anonymized lock setup) -->
+          <div v-else-if="onboardingStep === 2" class="biometric-screen-wrap" style="width:100%; border-radius:16px;">
+            <div>
+              <h3 style="color:#fff; font-size:1.2rem;">Set Up Finger Lock</h3>
+              <p style="font-size:0.65rem; color:var(--charcoal-600); margin-top:2px;">
+                Lock your app using your finger scan so that your health logs and chats stay 100% private to you!
+              </p>
+            </div>
 
-            <!-- Tier 2 Select -->
-            <button @click="handleOnboarding(22)" class="onboarding-btn">
-              <h4>Tier 2: Registered Access <span class="badge-tag blue">Over 18</span></h4>
-              <p>Opt-in SMS health notifications, interactive postings, and customized tracking dashboards.</p>
-            </button>
+            <div 
+              class="fingerprint-sensor-box" 
+              :class="{ scanning: isScanning }"
+              @click="startBiometricScan('setup')"
+            >
+              <div class="fingerprint-laser-line"></div>
+              <svg class="fingerprint-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" d="M12 11c0-1.657 1.343-3 3-3"/>
+                <path stroke-linecap="round" d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5 5"/>
+                <path stroke-linecap="round" d="M6 17c0-3.866 3.134-7 7-7s7 3.134 7 7"/>
+                <path stroke-linecap="round" d="M12 2v2M12 20v2M4 12H2M22 12h-2"/>
+              </svg>
+            </div>
+
+            <p style="font-size:0.7rem; color:var(--charcoal-200); font-weight:700;">
+              {{ isScanning ? 'Registering biometric pattern...' : 'Touch sensor to enroll thumbprint' }}
+            </p>
+
+            <div class="setup-progress-dots">
+              <span class="progress-dot"></span>
+              <span class="progress-dot active"></span>
+              <span class="progress-dot"></span>
+            </div>
           </div>
 
-          <!-- Tier 2 Form fields if active -->
-          <div v-if="onboardingTier === 22" style="width:100%; text-align: left;" class="pwa-card">
+          <!-- STEP 3: Tier 2 Registered Portal configuration -->
+          <div v-else-if="onboardingStep === 3" style="width:100%; text-align: left;" class="pwa-card">
             <h4 style="font-size:0.75rem; margin-bottom: 0.5rem; text-transform: uppercase;">Register Verified Account</h4>
             <div style="display:flex; flex-direction:column; gap:0.5rem;">
               <input v-model="registeredPhone" type="tel" placeholder="Phone (+265...)" class="chat-field" />
+              
               <select v-model="registeredDistrict" class="map-control-select">
                 <option value="">Select District</option>
                 <option value="Balaka">Balaka</option>
                 <option value="Lilongwe">Lilongwe</option>
               </select>
+
+              <select v-model="registeredAge" class="map-control-select">
+                <option value="">Select Birth Year</option>
+                <option v-for="year in birthYears" :key="year" :value="year">{{ year }}</option>
+              </select>
+
+              <input v-model="registeredPin" type="password" maxlength="4" placeholder="Create 4-Digit PIN" class="chat-field" style="letter-spacing: 0.35rem; text-align: center;" />
+
+              <label style="display:flex; align-items:center; gap:0.5rem; margin: 0.25rem 0; cursor:pointer;">
+                <input v-model="registeredConsent" type="checkbox" style="width: 14px; height: 14px;" />
+                <span style="font-size:0.58rem; color:var(--charcoal-600); line-height:1.2;">
+                  I give explicit Section 16 written consent for Oxfam's digital privacy standards and secure SMS updates.
+                </span>
+              </label>
+
               <button @click="completeRegisteredOnboarding" class="barrier-submit-btn" style="background-color: var(--oxfam-green);">
-                Complete Registration
+                Proceed to Biometric Setup
               </button>
             </div>
           </div>
+      </div>
+
+      <!-- ==========================================
+           SCREEN: MOCK BIOMETRIC SCANNER (LOCKED STATE)
+           ========================================== -->
+      <div v-else-if="isBiometricLocked && isBiometricSetup" class="biometric-screen-wrap" style="width:100%; border-radius:16px;">
+          <div style="margin-top:2rem;">
+            <svg style="width:36px; height:36px; color:var(--oxfam-green); margin-bottom: 0.5rem;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+            </svg>
+            <h3 style="color:#fff; font-size:1.15rem;">Your Safe Space is Locked</h3>
+            <p style="font-size:0.65rem; color:var(--charcoal-600); margin-top:2px;">Everything here is kept 100% private to you.</p>
+          </div>
+
+          <div 
+            class="fingerprint-sensor-box" 
+            :class="{ scanning: isScanning }"
+            @click="startBiometricScan('unlock')"
+          >
+            <!-- Laser scan beam overlay -->
+            <div class="fingerprint-laser-line"></div>
+            <!-- Concentric lines representing thumbprint -->
+            <svg class="fingerprint-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" d="M12 11c0-1.657 1.343-3 3-3"/>
+              <path stroke-linecap="round" d="M9 14c0-2.761 2.239-5 5-5s5 2.239 5 5"/>
+              <path stroke-linecap="round" d="M6 17c0-3.866 3.134-7 7-7s7 3.134 7 7"/>
+              <path stroke-linecap="round" d="M12 2v2M12 20v2M4 12H2M22 12h-2"/>
+            </svg>
+          </div>
+
+          <p style="font-size:0.7rem; color:var(--charcoal-200); font-weight:700;">
+            {{ isScanning ? 'Verifying secure thumbprint...' : 'Touch sensor to scan biometric lock' }}
+          </p>
         </div>
 
         <!-- ==========================================
-             SCREEN: WORKSPACE TABS
+             SCREEN: WORKSPACE TABS (AFTER BIOMETRICS)
              ========================================== -->
         <div v-else style="display:flex; flex-direction:column; gap:1rem; width:100%;">
           
-          <!-- TAB 1: LEARN (SRHR Articles) -->
-          <div v-if="activeTab === 'home'" style="display:flex; flex-direction:column; gap:1rem;">
-            
-            <!-- Welcome Gradient Card -->
-            <div class="pwa-card pwa-card-gradient">
-              <span style="font-size:0.55rem; font-weight:800; background-color: rgba(255,255,255,0.15); padding: 2px 6px; border-radius:10px;">
-                AUDIO PLAYBACK ENABLED
-              </span>
-              <h3 style="font-size: 1rem; margin-top: 0.35rem;">Let's learn together without stigma.</h3>
-              <p style="font-size: 0.6rem; opacity:0.85; margin-top: 2px;">Logged in pseudonymously: @{{ currentUser }}</p>
-            </div>
+          <!-- TAB 1: LEARN LANDING PAGE (Polished SRHR Content Hub) -->
+          <div v-if="activeTab === 'home'" style="display:flex; flex-direction:column; gap:0.85rem;">
+             <!-- Highly Informative Welcome Gradient Landing Banner -->
+             <div class="pwa-card pwa-card-gradient" style="padding: 1.25rem;">
+               <span style="font-size:0.55rem; font-weight:800; background-color: var(--oxfam-green); color:#fff; padding: 2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:0.5px;">
+                 DAILY RESILIENT GUIDANCE
+               </span>
+               <h3 style="font-size: 1.05rem; margin-top: 0.4rem; font-weight:800; color:#fff;">Let's learn together without stigma.</h3>
+               
+               <!-- Daily Informative Advice tip box -->
+               <div style="margin-top: 0.5rem; padding: 0.5rem 0.75rem; background-color: rgba(255,255,255,0.08); border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
+                 <p style="font-size: 0.65rem; line-height: 1.3; color:#fff; font-weight:500;">
+                   <strong>💡 Friendly Tip:</strong> Did a clinic turn you away? Don't worry! You have a full right to get confidential health guidance. You can call 811 (CCPF Hotline) for free from any phone to talk to a friendly counselor completely anonymously!
+                 </p>
+               </div>
+               <p style="font-size: 0.55rem; opacity:0.85; margin-top: 6px;">Secure Handle: @{{ currentUser }}</p>
+             </div>
+
+             <!-- Smart Focus Category Capsules (Quick Navigation) -->
+             <div style="display: flex; gap: 0.5rem; justify-content: space-between; width: 100%;">
+               <button @click="triggerDiscreetMode" class="category-capsule-btn">
+                 <span style="font-size: 0.85rem;">🧬</span>
+                 <span style="font-size: 0.55rem; font-weight: 700;">Biology Hub</span>
+               </button>
+               <button @click="activeTab = 'map'; emit('pwa-click')" class="category-capsule-btn">
+                 <span style="font-size: 0.85rem;">📍</span>
+                 <span style="font-size: 0.55rem; font-weight: 700;">Near Me</span>
+               </button>
+               <button @click="activeTab = 'chat'; emit('pwa-click')" class="category-capsule-btn">
+                 <span style="font-size: 0.85rem;">💬</span>
+                 <span style="font-size: 0.55rem; font-weight: 700;">Ask Peers</span>
+               </button>
+             </div>
+
+             <!-- Emergency CCPF 811 Hotline Button -->
+             <button @click="startHotlineCall" class="hotline-banner-btn">
+               <div style="display: flex; align-items: center; gap: 0.5rem;">
+                 <span class="hotline-phone-icon">📞</span>
+                 <div style="text-align: left;">
+                   <strong style="font-size: 0.7rem; display: block; color: #fff;">Simulate Toll-Free Help (Dial 811)</strong>
+                   <span style="font-size: 0.55rem; color: rgba(255,255,255,0.85); display: block;">Talk confidentially with a friendly counselor free of charge</span>
+                 </div>
+               </div>
+             </button>
+
+             <!-- Interactive Myth vs. Fact Flashcard -->
+             <div @click="mythFlipped = !mythFlipped; emit('pwa-click')" class="trivia-flip-card" :class="{ flipped: mythFlipped }">
+               <div class="trivia-card-inner">
+                 <!-- Front: The Myth -->
+                 <div class="trivia-card-front">
+                   <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px;">
+                     <span style="font-size: 0.52rem; font-weight: 800; color: #d97706; background: rgba(217, 119, 6, 0.1); padding: 1px 6px; border-radius: 4px;">💡 MYTH OR FACT?</span>
+                     <span style="font-size: 0.52rem; color: var(--charcoal-600);">Tap to flip</span>
+                   </div>
+                   <p style="font-size: 0.65rem; font-weight: 700; line-height: 1.3; margin: 0; color: var(--charcoal-900);">
+                     "Does using contraception make it impossible for a young woman to have babies later in life?"
+                   </p>
+                 </div>
+                 <!-- Back: The Fact -->
+                 <div class="trivia-card-back">
+                   <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px;">
+                     <span style="font-size: 0.52rem; font-weight: 800; color: var(--oxfam-green); background: rgba(120, 190, 32, 0.1); padding: 1px 6px; border-radius: 4px;">🧬 THE SCIENCE TRUTH</span>
+                     <span style="font-size: 0.52rem; color: var(--charcoal-600);">Tap to flip</span>
+                   </div>
+                   <p style="font-size: 0.58rem; line-height: 1.3; font-weight: 500; margin: 0; color: var(--charcoal-900);">
+                     <strong>Absolutely FALSE!</strong> Contraception is 100% reversible. When you stop using it, your fertility returns naturally. It has zero permanent effect!
+                   </p>
+                 </div>
+               </div>
+             </div>
 
             <!-- Articles Deck -->
             <!-- Article 1 -->
@@ -507,7 +755,28 @@ const handleNavClick = (tab) => {
                   stroke-width="1.5" 
                   stroke-dasharray="2,2"
                 />
+
+                <!-- Dynamically Animated Route Line starting from T.A center landmark (15, 80) to clicked pin -->
+                <path 
+                  v-if="selectedFacility !== null"
+                  :d="'M 15 80 Q 30 50 ' + selectedFacility.x + ' ' + selectedFacility.y"
+                  stroke="var(--oxfam-green)"
+                  stroke-width="2.5"
+                  class="map-route-line"
+                  fill="none"
+                />
+
+                <!-- Central starting TA post icon -->
+                <g transform="translate(15, 80)">
+                  <circle cx="0" cy="0" r="4" fill="var(--oxfam-green)" />
+                  <circle cx="0" cy="0" r="7" stroke="var(--oxfam-green)" stroke-width="1" fill="none" opacity="0.6"/>
+                </g>
               </svg>
+
+              <!-- Starting point label overlay -->
+              <div style="position:absolute; bottom:6px; left:6px; background-color: rgba(15,23,42,0.7); color:#fff; font-size:0.45rem; padding:1px 4px; border-radius:2px;">
+                🚩 TA Center Landmark
+              </div>
 
               <!-- Map Markers pins placed -->
               <button 
@@ -529,15 +798,15 @@ const handleNavClick = (tab) => {
             <!-- Clicked Facility Card HUD -->
             <div class="pwa-card" style="border-color: var(--charcoal-200);">
               <div v-if="selectedFacility === null" style="text-align:center; padding: 0.5rem 0;">
-                <p style="font-size:0.65rem; color:var(--charcoal-600);">
-                  Tap a clinic marker on the pre-compiled vector map to view product supply volumes and support options.
+                <p style="font-size:0.65rem; color:var(--charcoal-600); font-weight:600;">
+                  📍 Beating Heart services locator. Tap a marker to dynamically draw walking directions from TA landmarks and see operational supplies.
                 </p>
               </div>
               <div v-else class="facility-card-info">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 0.35rem;">
                   <div>
-                    <h4>{{ selectedFacility.name }}</h4>
-                    <p style="font-size:0.55rem; color: var(--charcoal-600);">TA {{ selectedFacility.ta.toUpperCase() }} • Mapped Center</p>
+                    <h4 style="font-size: 0.85rem; font-weight:800;">{{ selectedFacility.name }}</h4>
+                    <p style="font-size:0.55rem; color: var(--oxfam-green-dark); font-weight:700;">🟢 Open Now • Youth Counselor Available</p>
                   </div>
                   <span class="facility-tag">{{ selectedFacility.type }}</span>
                 </div>
@@ -563,8 +832,38 @@ const handleNavClick = (tab) => {
                   </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size: 0.55rem; color:var(--charcoal-600); border-t: 1px solid var(--charcoal-100); padding-top:0.4rem; margin-top:0.4rem;">
-                  <span>Distance: ~2.8km from you</span>
+                <!-- High-fidelity walking landmark directions -->
+                <div class="landmark-route-card">
+                  <span style="font-size:0.55rem; font-weight:800; text-transform:uppercase; color:var(--oxfam-green-dark); display:block; margin-bottom: 4px;">
+                    🚶 Local Landmark Routing (Zero Bandwidth)
+                  </span>
+                  
+                  <div class="landmark-route-step">
+                    <span class="route-step-number">1</span>
+                    <span>Start at the central Traditional Authority council assembly depot.</span>
+                  </div>
+
+                  <div class="landmark-route-step" v-if="selectedFacility.id === 1">
+                    <span class="route-step-number">2</span>
+                    <span>Head south along the gravel trading lane past the primary school borehole.</span>
+                  </div>
+                  <div class="landmark-route-step" v-else-if="selectedFacility.id === 2">
+                    <span class="route-step-number">2</span>
+                    <span>Head east past the community solar borehole court kiosk.</span>
+                  </div>
+                  <div class="landmark-route-step" v-else>
+                    <span class="route-step-number">2</span>
+                    <span>Head west along the council borehole marker lanes.</span>
+                  </div>
+
+                  <div class="landmark-route-step">
+                    <span class="route-step-number">3</span>
+                    <span>Clinic gate is immediately opposite the community maize mill.</span>
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size: 0.55rem; color:var(--charcoal-600); border-top: 1px solid var(--charcoal-100); padding-top:0.4rem; margin-top:0.4rem;">
+                  <span>Distance: ~2.8km from TA center</span>
                   <span style="font-weight:700; color:var(--oxfam-green);">✓ Zero-Rated Hotline Active</span>
                 </div>
               </div>
@@ -763,6 +1062,40 @@ const handleNavClick = (tab) => {
           <button @click="quickExitActive = false" class="restore-sandbox-btn">
             Resume Testing Sandbox
           </button>
+        </div>
+      </div>
+
+      <!-- Full-Screen Simulated CCPF Hotline Call Overlay -->
+      <div v-if="isCallingHotline" class="hotline-call-overlay">
+        <div style="display:flex; flex-direction:column; justify-content:space-between; height:100%; align-items:center; padding: 2rem 1rem;">
+          
+          <div style="text-align:center; margin-top:2rem;">
+            <div class="call-avatar-glowing">
+              <span>📞</span>
+            </div>
+            <h3 style="color:#fff; font-size:1.3rem; margin-top:1rem; font-weight:800;">CCPF Health Hotline</h3>
+            <p style="color:var(--oxfam-green); font-size:0.75rem; font-weight:700; margin-top:4px;">Dialing 811 (Zero-Rated)...</p>
+            <p style="color:var(--charcoal-600); font-size:0.65rem; margin-top:2px;">Safe & Confidential Malawian Guidance</p>
+          </div>
+
+          <div style="text-align:center; width: 100%;">
+            <p style="color:#fff; font-size:1.4rem; font-family: monospace; font-weight:800; letter-spacing:1px; margin-bottom: 1.5rem;">
+              {{ hotlineCallTimer }}
+            </p>
+            <!-- Call Pulse Wave Visualizer -->
+            <div class="wave-bars-box" style="margin-bottom: 2.5rem; justify-content: center; gap: 6px;">
+              <span class="wave-bar" style="animation-delay: 0.1s; height: 18px; width: 4px; background-color: var(--oxfam-green);"></span>
+              <span class="wave-bar" style="animation-delay: 0.3s; height: 28px; width: 4px; background-color: var(--oxfam-green);"></span>
+              <span class="wave-bar" style="animation-delay: 0.5s; height: 35px; width: 4px; background-color: var(--oxfam-green);"></span>
+              <span class="wave-bar" style="animation-delay: 0.2s; height: 20px; width: 4px; background-color: var(--oxfam-green);"></span>
+              <span class="wave-bar" style="animation-delay: 0.4s; height: 32px; width: 4px; background-color: var(--oxfam-green);"></span>
+            </div>
+
+            <button @click="endHotlineCall" class="end-call-btn">
+              <span>Hang Up</span>
+            </button>
+          </div>
+
         </div>
       </div>
 
