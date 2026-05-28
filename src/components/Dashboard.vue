@@ -17,6 +17,38 @@ const emit = defineEmits(['inject-alert']);
 // Spatial RLS Role Filter State
 const currentRole = ref('national'); // national, balaka, lilongwe
 
+// Local Decision Alert Box
+const showModal = ref(false);
+const modalTitle = ref('');
+const modalMsg = ref('');
+const modalType = ref('success');
+
+const triggerAlert = (title, message, type = 'success') => {
+  modalTitle.value = title;
+  modalMsg.value = message;
+  modalType.value = type;
+  showModal.value = true;
+};
+
+// Action 1: Escalate reported clinic barrier (bribe, stigma, refusal)
+const escalateIncident = (report) => {
+  report.status = 'Actioned';
+  triggerAlert(
+    "Emergency Action Initiated", 
+    `Case for [${report.issue}] at ${report.location} has been escalated to the District Health Officer (DHO) and Oxfam advisor network for immediate local investigation.`, 
+    "success"
+  );
+};
+
+// Action 2: Dispatch supply stock restock
+const dispatchRestock = (facilityName, product) => {
+  triggerAlert(
+    "Emergency Dispatch Approved", 
+    `Supply order for ${product} has been automatically generated and dispatched to the Central Medical Stores. Shipment to ${facilityName} scheduled within 24 hours.`, 
+    "success"
+  );
+};
+
 // Dynamic computed fields under Row-Level Security (Section 35, Malawian DPA)
 const filteredReports = computed(() => {
   if (currentRole.value === 'balaka') {
@@ -155,6 +187,81 @@ const handleRoleChange = () => {
     <!-- Analytics section grids -->
     <div class="analytics-section">
       
+      <!-- Actionable Supply Stockout Monitor Matrix (Action Center) -->
+      <div class="chart-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.4rem;">
+          <h4>Actionable Supply Stockout Monitor</h4>
+          <span style="font-size:0.55rem; color:var(--oxfam-green); font-weight:800;">INVENTORY ALIGNED</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.5rem; overflow-y:auto; max-height: 180px;">
+          <!-- Balaka Clinics -->
+          <div v-if="currentRole === 'balaka' || currentRole === 'national'" style="border: 1px solid var(--charcoal-200); padding: 0.5rem; border-radius:8px;">
+            <strong style="font-size: 0.65rem; color: var(--oxfam-green-dark); display:block; margin-bottom: 4px; text-align: left;">Balaka Catchment Units</strong>
+            
+            <!-- Phalula -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 4px 0; border-bottom:1px solid var(--charcoal-100);">
+              <div style="text-align: left;">
+                <span style="font-size:0.65rem; font-weight:700; display:block;">Phalula Youth Unit</span>
+                <span style="font-size:0.55rem; color:var(--charcoal-600);">Condoms: <span style="color:#ef4444; font-weight:700;">OUT OF STOCK</span></span>
+              </div>
+              <button @click="dispatchRestock('Phalula Youth Unit', 'Male & Female Condoms')" class="inject-btn" style="font-size:0.55rem; padding: 2px 6px;">
+                ⚡ Dispatch Restock
+              </button>
+            </div>
+
+            <!-- Nkaya -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 4px 0; border-bottom:1px solid var(--charcoal-100);">
+              <div style="text-align: left;">
+                <span style="font-size:0.65rem; font-weight:700; display:block;">Nkaya Clinic post</span>
+                <span style="font-size:0.55rem; color:var(--charcoal-600);">Implants: <span style="color:#ef4444; font-weight:700;">OUT OF STOCK</span></span>
+              </div>
+              <button @click="dispatchRestock('Nkaya Clinic post', 'Long-Acting Implants')" class="inject-btn" style="font-size:0.55rem; padding: 2px 6px;">
+                ⚡ Dispatch Restock
+              </button>
+            </div>
+            
+            <!-- Toleza -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 4px 0;">
+              <div style="text-align: left;">
+                <span style="font-size:0.65rem; font-weight:700; display:block;">Toleza Clinic Support</span>
+                <span style="font-size:0.55rem; color:var(--oxfam-green); font-weight:700;">All Items In Stock</span>
+              </div>
+              <span style="font-size:0.5rem; color:var(--oxfam-green); font-weight:800;">✓ SECURE</span>
+            </div>
+          </div>
+
+          <!-- Lilongwe Clinics -->
+          <div v-if="currentRole === 'lilongwe' || currentRole === 'national'" style="border: 1px solid var(--charcoal-200); padding: 0.5rem; border-radius:8px;">
+            <strong style="font-size: 0.65rem; color: #ef4444; display:block; margin-bottom: 4px; text-align: left;">Lilongwe Catchment Units</strong>
+            
+            <!-- Area 25 -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 4px 0; border-bottom:1px solid var(--charcoal-100);">
+              <div style="text-align: left;">
+                <span style="font-size:0.65rem; font-weight:700; display:block;">Area 25 Youth Clinic</span>
+                <span style="font-size:0.55rem; color:var(--charcoal-600);">Implants & Pills: <span style="color:#ef4444; font-weight:700;">OUT OF STOCK</span></span>
+              </div>
+              <button @click="dispatchRestock('Area 25 Youth Clinic', 'Implants & Oral Pills')" class="inject-btn" style="font-size:0.55rem; padding: 2px 6px;">
+                ⚡ Dispatch Restock
+              </button>
+            </div>
+
+            <!-- Kabudula -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 4px 0;">
+              <div style="text-align: left;">
+                <span style="font-size:0.65rem; font-weight:700; display:block;">Kabudula Health Centre</span>
+                <span style="font-size:0.55rem; color:var(--oxfam-green); font-weight:700;">All Items In Stock</span>
+              </div>
+              <span style="font-size:0.5rem; color:var(--oxfam-green); font-weight:800;">✓ SECURE</span>
+            </div>
+          </div>
+        </div>
+        
+        <p style="font-size:0.53rem; color:var(--charcoal-600); margin-top:0.4rem; line-height:1.2; text-align: left;">
+          Clicking "⚡ Dispatch Restock" issues an immediate digital dispatch voucher directly to the Central Medical Stores.
+        </p>
+      </div>
+
       <!-- Chart Column: SRHR shortages reported -->
       <div class="chart-card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -191,7 +298,8 @@ const handleRoleChange = () => {
           </div>
         </div>
 
-        <div style="border-t: 1px solid var(--charcoal-200); padding-top: 0.5rem; display:flex; justify-content:space-between; align-items:center;">
+        <!-- FIXED INLINE border-top property warning style -->
+        <div style="border-top: 1px solid var(--charcoal-200); padding-top: 0.5rem; display:flex; justify-content:space-between; align-items:center;">
           <span style="font-size:0.55rem; color:var(--charcoal-600);">RLS Zone: <strong style="text-transform:uppercase;">{{ currentRole }}</strong></span>
           <button @click="handleUSSDTrigger" class="inject-btn" style="font-size:0.55rem; padding: 2px 8px;">
             Simulate USSD Alert Ingestion
@@ -200,17 +308,18 @@ const handleRoleChange = () => {
       </div>
 
       <!-- Spatial security summary details -->
-      <div class="chart-card" style="justify-content:space-between;">
+      <div class="chart-card" style="justify-content:space-between; display:flex; flex-direction:column;">
         <div>
-          <h4 style="margin-bottom:0.25rem;">Spatial Data Privacy compliance</h4>
-          <span style="font-size:0.55rem; background-color: var(--oxfam-green-light); color:var(--oxfam-green-dark); padding:1px 5px; border-radius:3px; font-weight:700;">
-            Malawi DPA compliant
-          </span>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h4 style="margin-bottom:0.25rem;">Data Privacy & Spatial Compliance</h4>
+            <span style="font-size:0.55rem; background-color: var(--oxfam-green-light); color:var(--oxfam-green-dark); padding:1px 5px; border-radius:3px; font-weight:700;">
+              Malawi DPA Compliant
+            </span>
+          </div>
+          <p style="font-size: 0.65rem; color:var(--charcoal-600); line-height: 1.4; margin: 0.5rem 0; text-align: left;">
+            Sensitive details are programmatically geofenced under **Section 35 (Row-Level Security)**. Database records partition clinic reports so district managers only see data from their active catchments.
+          </p>
         </div>
-        
-        <p style="font-size: 0.65rem; color:var(--charcoal-600); line-height: 1.4; margin: 0.5rem 0;">
-          Under **Section 35 (Row-Level Security)**, databases partition sensitive patient data. District-level users from the **Balaka District Council** are programmatically blocked from viewing Lilongwe rows.
-        </p>
 
         <div style="background-color: var(--charcoal-100); border-radius:6px; padding:0.5rem; font-size:0.6rem; font-weight:700; color:var(--charcoal-700);">
           <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
@@ -238,11 +347,12 @@ const handleRoleChange = () => {
               <th>CATCHMENT HEALTH CENTER</th>
               <th>MAPPED BARRIER ISSUE</th>
               <th>RESOLUTION STATUS</th>
+              <th>DECISION ACTION</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="filteredReports.length === 0">
-              <td colspan="4" style="text-align:center; padding:1rem; color:var(--charcoal-600);">
+              <td colspan="5" style="text-align:center; padding:1rem; color:var(--charcoal-600);">
                 No barrier incidents located in this spatial context.
               </td>
             </tr>
@@ -262,9 +372,38 @@ const handleRoleChange = () => {
                   {{ r.status.includes('pending') ? 'IndexedDB Queue' : r.status }}
                 </span>
               </td>
+              <td>
+                <button 
+                  v-if="r.status === 'Investigating'"
+                  @click="escalateIncident(r)"
+                  class="inject-btn" 
+                  style="font-size:0.55rem; padding: 2px 6px; cursor: pointer;"
+                >
+                  ⚠️ Escalate DHO
+                </button>
+                <span v-else style="font-size:0.55rem; color:var(--oxfam-green); font-weight:700;">✓ Handled</span>
+              </td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Local Action Modal Confirmation -->
+    <div v-if="showModal" class="modal-backdrop" @click.self="showModal = false" style="z-index: 2000;">
+      <div class="modal-content" style="max-width:300px; padding:1.25rem;">
+        <div class="modal-header success" style="margin-bottom:0.75rem; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <svg style="width:20px; height:20px; color:var(--oxfam-green);" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span style="font-size:0.8rem; font-weight:800; text-transform:uppercase; color: var(--oxfam-green-dark);">{{ modalTitle }}</span>
+        </div>
+        <div class="modal-body" style="font-size:0.65rem; line-height:1.4; color:var(--charcoal-700); margin-bottom:1rem; text-align: center;">
+          {{ modalMsg }}
+        </div>
+        <button @click="showModal = false" class="modal-close-btn" style="width:100%; font-size:0.65rem; padding:0.4rem; cursor: pointer;">
+          Confirm Action
+        </button>
       </div>
     </div>
 
