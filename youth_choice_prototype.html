@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youth Choice Digital Ecosystem - Interactive Prototype</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        oxfam: {
+                            light: '#eef6ee',
+                            DEFAULT: '#3d943c',
+                            dark: '#2d6e2c',
+                        },
+                        canada: {
+                            DEFAULT: '#D32F2F',
+                            dark: '#9A1F1F',
+                        },
+                        charcoal: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f6f8f9;
+        }
+        .app-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .app-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .app-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .wave-animation {
+            animation: pulse-wave 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(2.2); }
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden antialiased text-slate-800">
+
+    <!-- Top Global Interactive Control Bar -->
+    <header class="sticky top-0 z-50 flex flex-wrap items-center justify-between px-4 py-3 border-b bg-charcoal-900 border-charcoal-800 text-slate-200">
+        <div class="flex items-center space-x-3">
+            <div class="flex items-center justify-center w-8 h-8 rounded bg-oxfam">
+                <span class="font-bold text-white text-md">C</span>
+            </div>
+            <div>
+                <h1 class="font-bold text-white text-md sm:text-lg">CHOICE Project Ecosystem</h1>
+                <p class="text-xs text-slate-400">VillageReach digital prototype (2025–2028)</p>
+            </div>
+        </div>
+        
+        <!-- Interactive Simulation Controller -->
+        <div class="flex items-center mt-2 space-x-2 sm:space-x-4 sm:mt-0">
+            <!-- Simulated Network Toggle -->
+            <div class="flex items-center px-3 py-1 rounded bg-charcoal-800">
+                <span class="mr-2 text-xs font-semibold text-slate-400">NETWORK:</span>
+                <button id="network-toggle-btn" onclick="toggleNetwork()" class="relative inline-flex items-center h-6 transition-colors duration-200 ease-in-out rounded-full w-12 bg-emerald-500 focus:outline-none">
+                    <span id="network-toggle-dot" class="inline-block w-4 h-4 transition-transform duration-200 ease-in-out transform translate-x-7 bg-white rounded-full"></span>
+                </button>
+                <span id="network-status-label" class="ml-2 text-xs font-bold text-emerald-400">Online</span>
+            </div>
+            
+            <!-- Quick View Toggle tabs (App / Dashboard / Documentation) -->
+            <div class="flex items-center p-0.5 rounded bg-charcoal-800">
+                <button onclick="switchView('pwa')" id="tab-btn-pwa" class="px-3 py-1 text-xs font-medium text-white transition rounded bg-oxfam">
+                    Mobile PWA
+                </button>
+                <button onclick="switchView('dashboard')" id="tab-btn-dashboard" class="px-3 py-1 text-xs font-medium transition rounded text-slate-400 hover:text-white">
+                    BI Dashboard
+                </button>
+                <button onclick="switchView('docs')" id="tab-btn-docs" class="px-3 py-1 text-xs font-medium transition rounded text-slate-400 hover:text-white">
+                    Project Info
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container Grid -->
+    <main class="container px-2 py-4 mx-auto max-w-7xl sm:px-4">
+        
+        <!-- PWA VIEW (Split view highlighting Emulator on the left and Live Sync Status on the right) -->
+        <div id="view-pwa" class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            
+            <!-- Mobile Frame Emulator (Col 5) -->
+            <div class="flex flex-col items-center justify-center lg:col-span-5 xl:col-span-5">
+                <div class="relative mx-auto border-[12px] border-slate-900 rounded-[40px] shadow-2xl bg-white w-full max-w-[380px] h-[760px] overflow-hidden flex flex-col">
+                    
+                    <!-- Phone Ear Speaker & Sensor Notch -->
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 h-5 w-36 bg-slate-900 rounded-b-xl z-50 flex justify-center items-center">
+                        <div class="w-12 h-1 bg-slate-700 rounded-full"></div>
+                    </div>
+
+                    <!-- Inner Mobile Screen Viewport Wrapper -->
+                    <div class="flex flex-col flex-1 w-full h-full pt-6 overflow-hidden bg-slate-50" id="mobile-screen-root">
+                        
+                        <!-- PWA Phone Status Bar -->
+                        <div class="flex items-center justify-between px-5 py-1 text-xs font-semibold text-slate-600 bg-slate-50">
+                            <span id="phone-clock">10:45 AM</span>
+                            <div class="flex items-center space-x-1">
+                                <span id="phone-network-icon">
+                                    <svg class="w-3.5 h-3.5 text-emerald-600 fill-current" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.79-1.79C9.09 19.61 10.48 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+                                </span>
+                                <span id="phone-signal-text" class="text-[10px]">4G</span>
+                                <svg class="w-4 h-4 text-slate-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm3 0a1 1 0 100-2 1 1 0 000 2zm3 0a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>
+                            </div>
+                        </div>
+
+                        <!-- PWA Active App Header -->
+                        <header id="pwa-header" class="flex items-center justify-between px-4 py-3 shadow-sm bg-oxfam text-white">
+                            <div class="flex items-center space-x-2">
+                                <div id="pwa-logo-container" class="p-1 bg-white rounded-full">
+                                    <svg class="w-4 h-4 text-oxfam" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <h2 id="pwa-title" class="text-sm font-bold tracking-tight">Youth Choice</h2>
+                                    <p id="pwa-subtitle" class="text-[9px] text-emerald-100 font-medium">SRHR Safe Space • Malawi</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <!-- Discreet Toggle -->
+                                <button onclick="toggleDiscreetMode()" class="p-1.5 transition rounded-full hover:bg-oxfam-dark" title="Discreet Mode (Hide SRHR Content)">
+                                    <svg id="discreet-icon" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </button>
+                                <!-- Quick Exit -->
+                                <button onclick="triggerQuickExit()" class="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-canada hover:bg-canada-dark text-white rounded shadow-sm flex items-center space-x-0.5">
+                                    <span>Quick Exit</span>
+                                </button>
+                            </div>
+                        </header>
+
+                        <!-- PWA Main Screen Scroll Area -->
+                        <div id="pwa-screen-body" class="flex-1 overflow-y-auto bg-slate-50 app-scrollbar">
+                            
+                            <!-- SCREEN: ONBOARDING (Dynamic Child Consent Bypass) -->
+                            <div id="screen-onboarding" class="p-5">
+                                <div class="mb-4 text-center">
+                                    <h3 class="text-lg font-extrabold text-slate-800">Tikulandirani!</h3>
+                                    <p class="mt-1 text-xs text-slate-500">Welcome to a completely private, youth-friendly safety toolkit for health in Malawi.</p>
+                                </div>
+                                <div class="p-3.5 mb-5 border rounded-lg bg-emerald-50 border-emerald-100">
+                                    <div class="flex space-x-2">
+                                        <div class="p-1 rounded-full bg-emerald-200">
+                                            <svg class="w-4 h-4 text-emerald-800" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 11.37h1.561V16H2.166v-4.63zm3.12 0h1.56V16h-1.56v-4.63zm3.12 0h1.56V16h-1.56v-4.63zm3.12 0h1.56V16h-1.56v-4.63zm3.12 0h1.561V16H14.65v-4.63z" clip-rule="evenodd"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-emerald-900">Legal Privacy Shield Enabled</h4>
+                                            <p class="text-[10px] text-emerald-700 leading-normal">Compliant with Malawi Data Protection Act (2024). We support secure anonymous access without identity logs.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <span class="block mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Choose Onboarding Mode</span>
+                                <div class="space-y-3">
+                                    <!-- Tier 1 Block -->
+                                    <div onclick="selectOnboardingTier(1)" class="p-4 transition border-2 border-slate-200 hover:border-oxfam rounded-xl bg-white cursor-pointer group">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h4 class="font-bold text-slate-800 text-sm flex items-center">
+                                                    Tier 1: 100% Anonymous
+                                                    <span class="ml-1.5 px-1.5 py-0.5 text-[8px] bg-emerald-100 text-emerald-800 rounded font-semibold">Under 18 Gate</span>
+                                                </h4>
+                                                <p class="text-[10px] text-slate-500 mt-1">Instant, no forms. Generates a safe local pseudonym for security. Zero phone logs.</p>
+                                            </div>
+                                            <div class="w-4 h-4 rounded-full border border-slate-300 group-hover:border-oxfam flex items-center justify-center">
+                                                <div class="w-2 h-2 rounded-full bg-transparent group-hover:bg-oxfam"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tier 2 Block -->
+                                    <div onclick="selectOnboardingTier(2)" class="p-4 transition border-2 border-slate-200 hover:border-oxfam rounded-xl bg-white cursor-pointer group">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h4 class="font-bold text-slate-800 text-sm flex items-center">
+                                                    Tier 2: Registered Portal
+                                                    <span class="ml-1.5 px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-semibold text-[8px]">Over 18</span>
+                                                </h4>
+                                                <p class="text-[10px] text-slate-500 mt-1">Unlock interactive group creation, period tracker, and SMS alerts. Requires simple phone code.</p>
+                                            </div>
+                                            <div class="w-4 h-4 rounded-full border border-slate-300 group-hover:border-oxfam flex items-center justify-center">
+                                                <div class="w-2 h-2 rounded-full bg-transparent group-hover:bg-oxfam"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SCREEN: MAIN WORKSPACE (Hidden initially, shown after onboarding) -->
+                            <div id="screen-workspace" class="hidden">
+                                
+                                <!-- HOME SECTION (SRHR Content Hub) -->
+                                <div id="section-home" class="p-4 space-y-4">
+                                    <!-- Dynamic Banner -->
+                                    <div class="p-4 text-white rounded-2xl bg-slate-900 bg-gradient-to-br from-slate-900 to-oxfam relative overflow-hidden">
+                                        <div class="absolute right-0 bottom-0 opacity-10">
+                                            <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                        </div>
+                                        <span class="text-[9px] uppercase tracking-widest font-bold text-emerald-300 bg-emerald-950/50 px-2 py-0.5 rounded-full inline-block">Chichewa & Yao Audio Ready</span>
+                                        <h3 class="mt-2 text-md font-extrabold leading-snug">Let's talk about health without stigma.</h3>
+                                        <p class="text-[10px] text-slate-200 mt-1" id="home-welcome-user">Logged in as: BalakaStar</p>
+                                    </div>
+
+                                    <!-- Search / Categories -->
+                                    <div class="relative">
+                                        <input type="text" placeholder="Search safety, health topics..." class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-oxfam bg-white pl-8">
+                                        <div class="absolute left-2.5 top-2.5 text-slate-400">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                        </div>
+                                    </div>
+
+                                    <!-- SRHR Articles Deck -->
+                                    <div class="space-y-3" id="articles-deck">
+                                        <!-- Article 1 -->
+                                        <div class="p-3.5 bg-white border border-slate-100 rounded-xl hover:shadow-sm transition flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-[9px] font-bold text-oxfam uppercase tracking-wider" id="art-cat-1">Contraception Safe-space</span>
+                                                    <span class="text-[8px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">3 min read</span>
+                                                </div>
+                                                <h4 class="mt-1 text-xs font-bold text-slate-800" id="art-title-1">Understanding Modern Contraception Methods</h4>
+                                                <p class="mt-1 text-[10px] text-slate-500 leading-relaxed" id="art-desc-1">Exploring the facts about implants, pills, and condoms available safely and confidentially at local clinics near you.</p>
+                                            </div>
+                                            <!-- Audio Integration -->
+                                            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                                                <button onclick="playSimulatedAudio('Understanding Modern Contraception Methods. Implants and pills are free at youth-friendly health units in Lilongwe and Balaka.')" class="flex items-center space-x-1.5 text-oxfam font-semibold text-[10px] hover:text-oxfam-dark bg-emerald-50 px-2 py-1 rounded">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                                                    <span>Mvetserani (Listen Audio)</span>
+                                                </button>
+                                                <span class="text-[9px] text-slate-400">Yao & Chichewa Supported</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Article 2 -->
+                                        <div class="p-3.5 bg-white border border-slate-100 rounded-xl hover:shadow-sm transition flex flex-col justify-between">
+                                            <div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-[9px] font-bold text-blue-600 uppercase tracking-wider" id="art-cat-2">My Body & Rights</span>
+                                                    <span class="text-[8px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">2 min read</span>
+                                                </div>
+                                                <h4 class="mt-1 text-xs font-bold text-slate-800" id="art-title-2">Consent, Relationships, and Peer Groups</h4>
+                                                <p class="mt-1 text-[10px] text-slate-500 leading-relaxed" id="art-desc-2">How to identify healthy boundaries, handle peer choices comfortably, and report any form of community harassment securely.</p>
+                                            </div>
+                                            <!-- Audio Integration -->
+                                            <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                                                <button onclick="playSimulatedAudio('Consent and relationship rights. Every young person in Malawi has the right to decide what concerns their body.')" class="flex items-center space-x-1.5 text-oxfam font-semibold text-[10px] hover:text-oxfam-dark bg-emerald-50 px-2 py-1 rounded">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                                                    <span>Mvetserani (Listen Audio)</span>
+                                                </button>
+                                                <span class="text-[9px] text-slate-400">Yao & Chichewa Supported</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Simulated Audio Player Wave Overlay (Hidden by default, triggered on click) -->
+                                    <div id="audio-toast" class="hidden fixed bottom-16 left-4 right-4 bg-charcoal-900 text-white rounded-xl p-3 shadow-lg flex items-center justify-between border border-slate-700">
+                                        <div class="flex items-center space-x-2.5">
+                                            <button onclick="stopSimulatedAudio()" class="p-1.5 bg-oxfam rounded-full hover:bg-oxfam-dark text-white">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                            </button>
+                                            <div>
+                                                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Audio Player Reading</p>
+                                                <p class="text-[11px] text-slate-100 font-bold truncate max-w-[160px]" id="audio-toast-title">Reading article...</p>
+                                            </div>
+                                        </div>
+                                        <!-- Animated Waves -->
+                                        <div class="flex items-center space-x-0.5 h-5 pr-2">
+                                            <span class="w-0.5 h-3 bg-oxfam rounded-full wave-animation" style="animation-delay: 0.1s"></span>
+                                            <span class="w-0.5 h-3 bg-oxfam rounded-full wave-animation" style="animation-delay: 0.3s"></span>
+                                            <span class="w-0.5 h-3 bg-oxfam rounded-full wave-animation" style="animation-delay: 0.5s"></span>
+                                            <span class="w-0.5 h-3 bg-oxfam rounded-full wave-animation" style="animation-delay: 0.2s"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- MAP SECTION (Services Near Me) -->
+                                <div id="section-map" class="hidden p-4 space-y-4">
+                                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Services Near Me</h3>
+                                    
+                                    <!-- Geography Landmarking Filters -->
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-[9px] font-bold uppercase text-slate-400 mb-1">District</label>
+                                            <select id="map-filter-district" onchange="updateMapMarkers()" class="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded">
+                                                <option value="balaka">Balaka</option>
+                                                <option value="lilongwe">Lilongwe</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[9px] font-bold uppercase text-slate-400 mb-1">Traditional Authority</label>
+                                            <select id="map-filter-ta" onchange="updateMapMarkers()" class="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded">
+                                                <option value="kalembo">T.A. Kalembo</option>
+                                                <option value="msamala">T.A. Msamala</option>
+                                                <option value="amidu">T.A. Amidu</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Lightweight Interactive Vector Map (Mocked beautifully using canvas style vectors) -->
+                                    <div class="relative w-full border border-slate-200 rounded-xl overflow-hidden bg-slate-100 h-44">
+                                        <!-- Simulated Grid Vector Map -->
+                                        <div class="absolute inset-0 opacity-15" style="background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 16px 16px;"></div>
+                                        
+                                        <!-- District Boundaries representation -->
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <svg id="vector-map-shapes" class="w-full h-full p-4 text-emerald-100 stroke-emerald-300 stroke-2" fill="currentColor" stroke-dasharray="2,2" viewBox="0 0 100 100">
+                                                <!-- Dynamic path representing Balaka or Lilongwe -->
+                                                <path id="map-boundary-path" d="M 10 30 Q 35 10 60 25 T 90 70 T 40 90 Z" class="fill-emerald-50" />
+                                            </svg>
+                                        </div>
+
+                                        <!-- Interactive Map Pins -->
+                                        <div id="map-pins-container" class="absolute inset-0">
+                                            <!-- Pins dynamically generated via JS -->
+                                        </div>
+
+                                        <!-- Map Controls Zoom HUD -->
+                                        <div class="absolute bottom-2 left-2 flex flex-col space-y-1">
+                                            <button class="w-6 h-6 rounded bg-white border shadow-sm flex items-center justify-center font-bold text-xs text-slate-700">+</button>
+                                            <button class="w-6 h-6 rounded bg-white border shadow-sm flex items-center justify-center font-bold text-xs text-slate-700">-</button>
+                                        </div>
+                                        <div class="absolute top-2 right-2 bg-slate-900/85 text-white px-2 py-0.5 text-[8px] font-bold rounded tracking-wider uppercase">
+                                            Offline Map Coded
+                                        </div>
+                                    </div>
+
+                                    <!-- Facility Cards Selector (Dynamic display based on map clicks) -->
+                                    <div id="facility-detail-card" class="bg-white p-3.5 border border-slate-200 rounded-xl shadow-sm">
+                                        <!-- Default instructions -->
+                                        <div id="facility-card-placeholder" class="text-center py-4">
+                                            <p class="text-xs text-slate-500">Tap clinic markers on the offline vector map to view real-time youth-friendly support and supply alerts.</p>
+                                        </div>
+
+                                        <div id="facility-card-content" class="hidden space-y-2">
+                                            <div class="flex justify-between items-start">
+                                                <div>
+                                                    <h4 id="fac-name" class="text-xs font-extrabold text-slate-800">Balaka District Hospital Health Unit</h4>
+                                                    <p id="fac-location" class="text-[9px] text-slate-400">TA Msamala • Near Central Trading post</p>
+                                                </div>
+                                                <span id="fac-badge" class="px-2 py-0.5 text-[8px] font-extrabold bg-emerald-100 text-emerald-800 rounded">Youth Friendly</span>
+                                            </div>
+                                            
+                                            <!-- Contraceptive/Implant Supply Alerts -->
+                                            <div class="grid grid-cols-3 gap-1.5 pt-2">
+                                                <div class="p-1.5 border border-slate-100 rounded bg-slate-50 text-center">
+                                                    <p class="text-[8px] text-slate-400 font-bold uppercase">Implants</p>
+                                                    <p id="fac-implant-status" class="text-[9px] font-extrabold text-emerald-600">IN STOCK</p>
+                                                </div>
+                                                <div class="p-1.5 border border-slate-100 rounded bg-slate-50 text-center">
+                                                    <p class="text-[8px] text-slate-400 font-bold uppercase">Pills</p>
+                                                    <p id="fac-pills-status" class="text-[9px] font-extrabold text-emerald-600">IN STOCK</p>
+                                                </div>
+                                                <div class="p-1.5 border border-slate-100 rounded bg-slate-50 text-center">
+                                                    <p class="text-[8px] text-slate-400 font-bold uppercase">Condoms</p>
+                                                    <p id="fac-condoms-status" class="text-[9px] font-extrabold text-canada font-bold">STOCKOUT</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="pt-2 text-[9px] text-slate-500 flex justify-between">
+                                                <span>Distance: ~2.4km from you</span>
+                                                <span class="text-oxfam font-bold">✓ Call Hotline (CCPF) Supported</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- CHAT SECTION (Moderated Forums) -->
+                                <div id="section-chat" class="hidden p-4 flex flex-col h-[520px]">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div>
+                                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Community Forums</h3>
+                                            <p class="text-[9px] text-slate-500 mt-0.5">Moderator: <span class="text-oxfam font-bold">Active (Oxfam Lead)</span></p>
+                                        </div>
+                                        <span class="px-2 py-0.5 bg-slate-200 text-slate-700 text-[8px] font-extrabold rounded uppercase tracking-wider">Pseudonym Mode</span>
+                                    </div>
+
+                                    <!-- Live Forum Conversation Thread -->
+                                    <div id="forum-thread-container" class="flex-1 overflow-y-auto space-y-3 p-1.5 bg-white border border-slate-200 rounded-xl app-scrollbar mb-2">
+                                        <!-- Posts dynamically added here -->
+                                    </div>
+
+                                    <!-- Quick text input with Optimistic Outbox queue visual -->
+                                    <div class="space-y-1">
+                                        <div class="flex space-x-1.5">
+                                            <input type="text" id="forum-message-input" placeholder="Say something anonymously..." class="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-oxfam bg-white">
+                                            <button onclick="submitForumPost()" class="p-2 bg-oxfam hover:bg-oxfam-dark text-white rounded-lg flex items-center justify-center">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                            </button>
+                                        </div>
+                                        <span id="forum-hint" class="text-[9px] text-slate-400 block">All comments are asynchronously verified before standard server listing.</span>
+                                    </div>
+                                </div>
+
+                                <!-- REPORT SECTION (Access Barrier Reporter) -->
+                                <div id="section-report" class="hidden p-4 space-y-4">
+                                    <div class="mb-2">
+                                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Barrier Reporting Tool</h3>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">Encountered issues at a clinic? File an anonymous safety report directly to Ministry monitors & Oxfam team.</p>
+                                    </div>
+
+                                    <!-- Interactive Multistep Form -->
+                                    <form id="barrier-form" onsubmit="submitBarrierReport(event)" class="space-y-3 bg-white p-4 border border-slate-200 rounded-xl shadow-sm">
+                                        
+                                        <!-- Step 1: Issue Selection Grid -->
+                                        <div>
+                                            <label class="block text-[9px] font-extrabold uppercase text-slate-400 mb-1.5">1. What is the Issue?</label>
+                                            <div class="grid grid-cols-2 gap-1.5" id="barrier-issue-grid">
+                                                <button type="button" onclick="selectBarrierIssue('Product Stock-out')" class="issue-pill-btn p-2 border rounded-lg text-left text-xs transition border-slate-200 hover:border-oxfam bg-slate-50">
+                                                    📦 Stock-out Alert
+                                                </button>
+                                                <button type="button" onclick="selectBarrierIssue('Service Denial')" class="issue-pill-btn p-2 border rounded-lg text-left text-xs transition border-slate-200 hover:border-oxfam bg-slate-50">
+                                                    ❌ Service Refused
+                                                </button>
+                                                <button type="button" onclick="selectBarrierIssue('Stigma/Harassment')" class="issue-pill-btn p-2 border rounded-lg text-left text-xs transition border-slate-200 hover:border-oxfam bg-slate-50">
+                                                    🗣️ Staff Stigma
+                                                </button>
+                                                <button type="button" onclick="selectBarrierIssue('Bribe Demand')" class="issue-pill-btn p-2 border rounded-lg text-left text-xs transition border-slate-200 hover:border-oxfam bg-slate-50">
+                                                    💰 Bribe/Fee Asked
+                                                </button>
+                                            </div>
+                                            <input type="hidden" id="form-barrier-issue" required>
+                                        </div>
+
+                                        <!-- Step 2: Clinic Location Landmark Selector -->
+                                        <div>
+                                            <label class="block text-[9px] font-extrabold uppercase text-slate-400 mb-1">2. Where did this happen?</label>
+                                            <div class="space-y-1.5">
+                                                <select id="form-barrier-district" class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded" required>
+                                                    <option value="">-- Choose District --</option>
+                                                    <option value="Balaka">Balaka</option>
+                                                    <option value="Lilongwe">Lilongwe</option>
+                                                </select>
+                                                <input type="text" id="form-barrier-landmark" placeholder="Nearest Clinic / Landmark Trading Center" class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none" required>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 3: Optional Text Description -->
+                                        <div>
+                                            <label class="block text-[9px] font-extrabold uppercase text-slate-400 mb-1">3. Additional Details (Anonymous)</label>
+                                            <textarea id="form-barrier-details" rows="2" placeholder="Tell us what happened. Your details are safe." class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none"></textarea>
+                                        </div>
+
+                                        <!-- Submit button with network aware logic -->
+                                        <button type="submit" class="w-full py-2 bg-canada hover:bg-canada-dark text-white font-bold text-xs rounded-lg transition shadow-sm flex items-center justify-center space-x-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                            <span>Send Confidential Report</span>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Bottom Tab Navigation Menu -->
+                                <nav class="border-t border-slate-200 bg-white flex justify-around py-1.5 text-slate-400 sticky bottom-0 z-30">
+                                    <button onclick="switchPwaTab('home')" id="nav-btn-home" class="flex flex-col items-center flex-1 text-oxfam">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                                        <span class="text-[9px] font-medium mt-0.5">Learn</span>
+                                    </button>
+                                    <button onclick="switchPwaTab('map')" id="nav-btn-map" class="flex flex-col items-center flex-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        <span class="text-[9px] font-medium mt-0.5">Map</span>
+                                    </button>
+                                    <button onclick="switchPwaTab('chat')" id="nav-btn-chat" class="flex flex-col items-center flex-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
+                                        <span class="text-[9px] font-medium mt-0.5">Forums</span>
+                                    </button>
+                                    <button onclick="switchPwaTab('report')" id="nav-btn-report" class="flex flex-col items-center flex-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        <span class="text-[9px] font-medium mt-0.5">Report</span>
+                                    </button>
+                                </nav>
+                            </div>
+
+                            <!-- SCREEN: QUICK EXIT DECORATIVE REDIRECT MASK -->
+                            <div id="screen-quickexit" class="hidden h-full flex flex-col justify-center items-center bg-white p-6">
+                                <div class="w-full max-w-[280px] space-y-4">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-extrabold text-2xl text-blue-600">Google</span>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="text" value="Malawi National Education syllabus" disabled class="w-full px-3 py-2 border rounded-full text-xs text-slate-500 bg-slate-50 shadow-sm pl-8">
+                                        <div class="absolute left-3 top-2.5 text-slate-400">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 border rounded bg-slate-50 space-y-2">
+                                        <p class="text-[10px] text-slate-600 leading-normal font-bold">Recommended Study Links:</p>
+                                        <ul class="text-[9px] space-y-1 text-blue-600 underline">
+                                            <li>• Secondary School Chemistry Modules</li>
+                                            <li>• Malawi National Examination Board</li>
+                                        </ul>
+                                    </div>
+                                    <button onclick="restoreFromExit()" class="w-full py-2 bg-slate-800 text-white rounded text-xs font-bold shadow hover:bg-slate-900 transition">
+                                        Resume Prototype View
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sync Control Board, Active Sync Logs & Live Visual Outbox (Col 7) -->
+            <div class="lg:col-span-7 xl:col-span-7 flex flex-col justify-between space-y-4">
+                
+                <!-- Prototype Guide Callout -->
+                <div class="bg-gradient-to-r from-oxfam/10 to-transparent border-l-4 border-oxfam p-4 rounded-r-xl">
+                    <h3 class="text-sm font-extrabold text-oxfam-dark uppercase tracking-wider">How to test Offline-First Syncing:</h3>
+                    <ol class="mt-2 text-xs text-slate-600 list-decimal pl-4 space-y-1">
+                        <li>Toggle the simulated network switcher to <span class="font-bold text-red-600">Offline</span> in the top header.</li>
+                        <li>Submit a post in the <strong>Forums</strong> or submit a <strong>Barrier Report</strong> on the mobile emulator.</li>
+                        <li>Observe the PWA using <strong>Optimistic UI</strong> immediately while flagging the card as <span class="text-amber-600 font-bold">"Pending Sync"</span> in local outbox queue.</li>
+                        <li>Toggle the network back to <span class="font-bold text-emerald-600">Online</span> and watch it synchronize immediately to the live Central Dashboard below!</li>
+                    </ol>
+                </div>
+
+                <!-- Simulated Local Cache Browser Outbox Queue Status -->
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-between min-h-[160px]">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="p-1 rounded bg-slate-100 text-slate-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            </span>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800">IndexedDB Outbox Queue (Offline State Store)</h4>
+                                <p class="text-[10px] text-slate-500">Local cache syncing logs</p>
+                            </div>
+                        </div>
+                        <span id="queue-badge-count" class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full font-bold text-[10px]">0 queued</span>
+                    </div>
+
+                    <!-- List of current outbox jobs -->
+                    <div id="outbox-queue-items" class="flex-1 mt-3 space-y-2 overflow-y-auto max-h-28 text-xs app-scrollbar">
+                        <div class="text-center text-slate-400 py-6 text-[11px]">
+                            Outbox empty. Connect to offline mode to queue diagnostic actions.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Programmatic UI/UX Highlights (Design Specs Showcase) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Tech Spec 1 -->
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm space-y-2">
+                        <div class="flex items-center space-x-2 text-oxfam">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11 7H13V9H11V7ZM11 11H13V17H11V11Z"/></svg>
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Dual-Tier Onboarding Flow</h4>
+                        </div>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            To ensure complete alignment with the **Malawi Data Protection Act Section 17**, Tier 1 allows adolescents access to SRHR educational cards and interactive mapping with zero collection of Personally Identifiable Information (PII) bypasses strict parental consent locks.
+                        </p>
+                    </div>
+
+                    <!-- Tech Spec 2 -->
+                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm space-y-2">
+                        <div class="flex items-center space-x-2 text-canada">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8H20C20.5523 8 21 8.44772 21 9V15C21 15.5523 20.5523 16 20 16H18V18C18 18.5523 17.5523 19 17 19H7C6.44772 19 6 18.5523 6 18V16H4C3.44772 16 3 15.5523 3 15V9C3 8.44772 3.44772 8 4 8H6V6C6 5.44772 6.44772 5 7 5H17C17.5523 5 18 5.44772 18 6V8ZM8 7V8H16V7H8ZM8 10V14H16V10H8Z"/></svg>
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Aesthetic Safety & Discreet Cover</h4>
+                        </div>
+                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                            When users press the **Discreet Mode Eye Icon**, all headers instantly strip explicit terms. When launching from the mobile home screen, the app utilizes a generic "Youth Learn" emblem ensuring absolute discretion.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- LIVE BI INTERACTIVE DASHBOARD VIEW (Metabase style) -->
+        <div id="view-dashboard" class="hidden space-y-6">
+            
+            <!-- Dashboard Controls & RBAC Row Level Security dropdown -->
+            <div class="bg-white border border-slate-200 p-4 rounded-xl flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-800">Apache Superset Multi-Channel Live Dashboard</h2>
+                    <p class="text-[11px] text-slate-500">Aggregated tracking across PWA, WhatsApp Business, Facebook Graph, USSD Gateway, and CCPF Hotlines.</p>
+                </div>
+                
+                <!-- Dynamic RLS Selector -->
+                <div class="flex items-center space-x-2 bg-slate-50 border p-1.5 rounded-lg text-xs">
+                    <span class="font-bold text-slate-500 uppercase text-[9px]">Row-Level Security Role:</span>
+                    <select id="dashboard-rls-role" onchange="applyRLSFilter()" class="bg-white border text-xs font-semibold rounded px-2 py-1 text-slate-700">
+                        <option value="national">National Super-Admin (All Districts)</option>
+                        <option value="balaka">Balaka District Coordinator (Balaka Only)</option>
+                        <option value="lilongwe">Lilongwe Regional Director (Lilongwe Only)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Card 1 -->
+                <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Total Active Users</p>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <span id="kpi-active-users" class="text-xl sm:text-2xl font-black text-slate-800">4,812</span>
+                        <span class="text-xs text-emerald-600 font-bold">▲ 14%</span>
+                    </div>
+                    <p class="text-[9px] text-slate-400 mt-1">Across Balaka & Lilongwe</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Synchronized Ingests</p>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <span id="kpi-syncs" class="text-xl sm:text-2xl font-black text-slate-800">12,148</span>
+                        <span class="text-xs text-emerald-600 font-bold">▲ 98.4% uptime</span>
+                    </div>
+                    <p class="text-[9px] text-slate-400 mt-1">IndexedDB Sync latency &lt;2s</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Access Barrier Reports</p>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <span id="kpi-barriers" class="text-xl sm:text-2xl font-black text-canada">42</span>
+                        <span class="text-xs text-amber-600 font-bold">Requires Action</span>
+                    </div>
+                    <p class="text-[9px] text-slate-400 mt-1">Direct API push to Ministry logs</p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="bg-white p-4 border border-slate-200 rounded-xl shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">CCPF Hotline Referral Conversions</p>
+                    <div class="flex items-baseline space-x-2 mt-1">
+                        <span class="text-xl sm:text-2xl font-black text-oxfam">1,402</span>
+                        <span class="text-xs text-emerald-600 font-bold">▲ 8%</span>
+                    </div>
+                    <p class="text-[9px] text-slate-400 mt-1">Toll-free referrals</p>
+                </div>
+            </div>
+
+            <!-- Visualization Charts and Real-time Action Feeds -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Channel Mix Comparison Visualizer (Col 5) -->
+                <div class="lg:col-span-5 bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Multi-Channel Engagement Ingest Rate</h3>
+                        <p class="text-[10px] text-slate-400">Total sessions registered per technology channel</p>
+                    </div>
+
+                    <!-- Beautiful simulated bar list visualization -->
+                    <div class="space-y-3.5 my-4">
+                        <!-- PWA -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="font-bold text-slate-700 flex items-center">
+                                    <span class="w-2.5 h-2.5 bg-oxfam rounded-full mr-2"></span>
+                                    Youth Choice PWA
+                                </span>
+                                <span class="text-slate-500 font-semibold" id="bar-val-pwa">3,240 clicks</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="bar-pwa" class="bg-oxfam h-full rounded-full transition-all duration-500" style="width: 65%"></div>
+                            </div>
+                        </div>
+
+                        <!-- WhatsApp Business API -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="font-bold text-slate-700 flex items-center">
+                                    <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full mr-2"></span>
+                                    WhatsApp Business API
+                                </span>
+                                <span class="text-slate-500 font-semibold">1,820 replies</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full rounded-full" style="width: 45%"></div>
+                            </div>
+                        </div>
+
+                        <!-- CCPF Hotline Voice -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="font-bold text-slate-700 flex items-center">
+                                    <span class="w-2.5 h-2.5 bg-sky-500 rounded-full mr-2"></span>
+                                    CCPF Hotline (Voice Calls)
+                                </span>
+                                <span class="text-slate-500 font-semibold">942 minutes</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-sky-500 h-full rounded-full" style="width: 30%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Facebook Community -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="font-bold text-slate-700 flex items-center">
+                                    <span class="w-2.5 h-2.5 bg-blue-600 rounded-full mr-2"></span>
+                                    Facebook Page Reach
+                                </span>
+                                <span class="text-slate-500 font-semibold">520 engagements</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-blue-600 h-full rounded-full" style="width: 18%"></div>
+                            </div>
+                        </div>
+
+                        <!-- USSD Gateway -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="font-bold text-slate-700 flex items-center">
+                                    <span class="w-2.5 h-2.5 bg-amber-500 rounded-full mr-2"></span>
+                                    USSD Clinic Finder (*382#)
+                                </span>
+                                <span class="text-slate-500 font-semibold">312 sessions</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-amber-500 h-full rounded-full" style="width: 12%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t text-[10px] text-slate-400 flex justify-between">
+                        <span>Updated: Live</span>
+                        <span class="underline cursor-pointer hover:text-slate-600">Download CSV</span>
+                    </div>
+                </div>
+
+                <!-- Real-Time Access Barrier Sync Feed & Stockout Tracker (Col 7) -->
+                <div class="lg:col-span-7 bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Access Barrier Reports & Supply Chain Alerts</h3>
+                            <span class="px-2 py-0.5 bg-red-100 text-canada text-[9px] font-bold rounded-full">Requires Immediate Action</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400">Row-level listings showing geographic locations of critical contraceptive barriers</p>
+                    </div>
+
+                    <!-- Live Aggregated List of submitted reports -->
+                    <div class="overflow-x-auto my-3">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="border-b text-slate-400 font-bold">
+                                    <th class="py-1">District</th>
+                                    <th class="py-1">Location / Clinic</th>
+                                    <th class="py-1">Issue Reported</th>
+                                    <th class="py-1">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-barrier-rows" class="divide-y divide-slate-100">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pt-2 border-t text-[10px] text-slate-400 flex justify-between items-center">
+                        <span>Displaying under role: <strong class="text-slate-600 uppercase" id="rls-current-indicator">National</strong></span>
+                        <button onclick="simulateMockAlert()" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded text-[10px]">
+                            Simulate USSD Stockout Alert
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- TECHNICAL DETAILS AND RFP OVERVIEW VIEW (For Evaluators) -->
+        <div id="view-docs" class="hidden space-y-6">
+            <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-sm space-y-4">
+                <h2 class="text-lg font-extrabold text-slate-900 border-b pb-2">RFP Alignment: Technical & Structural Architecture</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-oxfam text-sm uppercase tracking-wider">1. Low Bandwidth PWA</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Designed to function perfectly with high-latency, expensive data packets in Balaka and Lilongwe. Custom service-worker captures resource queries locally and interfaces with IndexedDB storage queue. Assets like local maps use vector coordinate representations requiring less than 85KB overhead.
+                        </p>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-canada text-sm uppercase tracking-wider">2. Malawi DPA Compliance</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Under Section 17, processing minor's health data strictly mandates guardian consent. Our framework implements a safe tier-based onboarding, which dynamically separates non-PII educational access from personal premium modules to guarantee safety.
+                        </p>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-indigo-600 text-sm uppercase tracking-wider">3. Cross-Channel ETL</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            The BI dashboard acts as a single point of truth. It consolidates database syncs, WhatsApp webhooks, Facebook Graph parameters, and daily dial-logs from Chipatala cha pa Foni (CCPF) to let decision-makers analyze health trends in real time.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t flex flex-wrap justify-between items-center gap-2">
+                    <p class="text-xs text-slate-500">Proposed Deployment Phase: 4 Months Setup + 12 Months Support SLA</p>
+                    <a href="#view-pwa" onclick="switchView('pwa')" class="px-4 py-2 bg-oxfam hover:bg-oxfam-dark text-white rounded font-bold text-xs shadow transition">Back to Live Interactive Sandbox</a>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Global Custom Modal / Toast System (Eliminating standard Alert) -->
+    <div id="custom-modal-backdrop" class="hidden fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border space-y-3 transform scale-95 transition-all duration-200" id="custom-modal-content">
+            <div class="flex items-center space-x-2.5 text-oxfam" id="modal-header-container">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h3 class="font-bold text-slate-800 text-sm sm:text-base" id="modal-title">Action Complete</h3>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed" id="modal-message">Your changes have been processed successfully.</p>
+            <div class="pt-2">
+                <button onclick="closeModal()" class="w-full py-2 bg-slate-800 text-white font-bold text-xs rounded-lg hover:bg-slate-900 transition shadow">
+                    Awesome, Got it
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footnotes -->
+    <footer class="text-center py-8 text-xs text-slate-400 border-t mt-12 bg-white">
+        <p>© 2026 VillageReach • Developed for Oxfam Canada & Global Affairs Canada</p>
+        <p class="mt-1">Designed by UI/UX Lead Consultant - Malawi CHOICE Cohort</p>
+    </footer>
+
+    <!-- INTERACTIVE PROTO_ENGINE (JAVASCRIPT) -->
+    <script>
+        // Global State variables
+        let isOnline = true;
+        let onboardingTier = null;
+        let selectedPwaTab = 'home';
+        let discreetMode = false;
+        let selectedBarrierIssue = '';
+        let currentRlsRole = 'national';
+        let speechSynth = window.speechSynthesis;
+        let activeSpeechUtterance = null;
+
+        // Data Models
+        const outboxQueue = [];
+        
+        const initialForumPosts = [
+            { id: 101, username: 'BalakaStar77', message: 'Hello, is the youth friendly clinic open at Phalula today?', timestamp: '10:14 AM', district: 'Balaka', status: 'synced' },
+            { id: 102, username: 'ChamboRunner', message: 'Yes, I was there yesterday. They have condoms and implants in stock!', timestamp: '10:25 AM', district: 'Balaka', status: 'synced' },
+            { id: 103, username: 'ZombaGuide', message: 'Remember you can also dial 811 for the CCPF hotline for direct clinical advice.', timestamp: '10:30 AM', district: 'Lilongwe', status: 'synced' }
+        ];
+
+        const initialBarrierReports = [
+            { id: 201, district: 'Balaka', location: 'Phalula Health Unit', issue: 'Product Stock-out', status: 'Actioned', details: 'No oral contraceptives available.' },
+            { id: 202, district: 'Lilongwe', location: 'Area 25 Clinic', issue: 'Service Denial', status: 'Pending Review', details: 'Youth was turned away without consultation.' },
+            { id: 203, district: 'Balaka', location: 'Liwonde Clinic', issue: 'Stigma/Harassment', status: 'Investigating', details: 'Provider lectured client.' }
+        ];
+
+        const mapMarkers = {
+            balaka: [
+                { id: 1, name: 'Phalula Youth Unit', x: 25, y: 35, ta: 'kalembo', implants: 'IN STOCK', pills: 'IN STOCK', condoms: 'STOCKOUT' },
+                { id: 2, name: 'Nkaya Clinic Health post', x: 65, y: 55, ta: 'msamala', implants: 'STOCKOUT', pills: 'IN STOCK', condoms: 'IN STOCK' },
+                { id: 3, name: 'Toleza Clinic Support', x: 45, y: 75, ta: 'amidu', implants: 'IN STOCK', pills: 'STOCKOUT', condoms: 'IN STOCK' }
+            ],
+            lilongwe: [
+                { id: 4, name: 'Kabudula Health Centre', x: 30, y: 40, ta: 'kalembo', implants: 'IN STOCK', pills: 'IN STOCK', condoms: 'IN STOCK' },
+                { id: 5, name: 'Area 25 Youth Clinic', x: 70, y: 30, ta: 'msamala', implants: 'STOCKOUT', pills: 'STOCKOUT', condoms: 'IN STOCK' },
+                { id: 6, name: 'Mitundu Health Outpost', x: 50, y: 70, ta: 'amidu', implants: 'IN STOCK', pills: 'IN STOCK', condoms: 'STOCKOUT' }
+            ]
+        };
+
+        // Initialize App on DOM Ready
+        window.onload = function() {
+            // Clock Initialization
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('phone-clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }, 1000);
+
+            // Populate Map
+            updateMapMarkers();
+
+            // Populate Forum Messages
+            renderForumThread();
+
+            // Populate Dashboard rows
+            renderDashboardBarriers();
+        };
+
+        // Switch View Engine (Tabs between Mobile PWA, Central Dashboard, Project Specs)
+        function switchView(viewName) {
+            document.getElementById('view-pwa').classList.add('hidden');
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-docs').classList.add('hidden');
+
+            document.getElementById('tab-btn-pwa').className = "px-3 py-1 text-xs font-medium transition rounded text-slate-400 hover:text-white";
+            document.getElementById('tab-btn-dashboard').className = "px-3 py-1 text-xs font-medium transition rounded text-slate-400 hover:text-white";
+            document.getElementById('tab-btn-docs').className = "px-3 py-1 text-xs font-medium transition rounded text-slate-400 hover:text-white";
+
+            if (viewName === 'pwa') {
+                document.getElementById('view-pwa').classList.remove('hidden');
+                document.getElementById('tab-btn-pwa').className = "px-3 py-1 text-xs font-medium text-white transition rounded bg-oxfam";
+            } else if (viewName === 'dashboard') {
+                document.getElementById('view-dashboard').classList.remove('hidden');
+                document.getElementById('tab-btn-dashboard').className = "px-3 py-1 text-xs font-medium text-white transition rounded bg-oxfam";
+                renderDashboardBarriers();
+            } else if (viewName === 'docs') {
+                document.getElementById('view-docs').classList.remove('hidden');
+                document.getElementById('tab-btn-docs').className = "px-3 py-1 text-xs font-medium text-white transition rounded bg-oxfam";
+            }
+        }
+
+        // Network Online/Offline Simulator Logic
+        function toggleNetwork() {
+            isOnline = !isOnline;
+            const btn = document.getElementById('network-toggle-btn');
+            const dot = document.getElementById('network-toggle-dot');
+            const label = document.getElementById('network-status-label');
+            const phoneNetIcon = document.getElementById('phone-network-icon');
+            const phoneSignalText = document.getElementById('phone-signal-text');
+
+            if (isOnline) {
+                btn.className = "relative inline-flex items-center h-6 transition-colors duration-200 ease-in-out rounded-full w-12 bg-emerald-500 focus:outline-none";
+                dot.className = "inline-block w-4 h-4 transition-transform duration-200 ease-in-out transform translate-x-7 bg-white rounded-full";
+                label.innerText = "Online";
+                label.className = "ml-2 text-xs font-bold text-emerald-400";
+                
+                phoneNetIcon.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-600 fill-current" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.79-1.79C9.09 19.61 10.48 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>`;
+                phoneSignalText.innerText = "4G";
+
+                // Trigger auto sync of outbox
+                syncOutboxQueue();
+            } else {
+                btn.className = "relative inline-flex items-center h-6 transition-colors duration-200 ease-in-out rounded-full w-12 bg-slate-600 focus:outline-none";
+                dot.className = "inline-block w-4 h-4 transition-transform duration-200 ease-in-out transform translate-x-1 bg-white rounded-full";
+                label.innerText = "Offline Mode";
+                label.className = "ml-2 text-xs font-bold text-slate-400";
+
+                phoneNetIcon.innerHTML = `<svg class="w-3.5 h-3.5 text-slate-400 fill-current" viewBox="0 0 24 24"><path d="M23.64 20.38l-2.73-2.73C21.82 16.14 22 14.12 22 12c0-5.52-4.48-10-10-10-2.12 0-4.14.18-5.65.91L3.62 1.18 1.18 3.62l19.82 19.82 2.64-3.06zM12 4c4.41 0 8 3.59 8 8 0 1.57-.46 3.03-1.24 4.26L5.74 5.24C6.97 4.46 8.43 4 12 4z"/></svg>`;
+                phoneSignalText.innerText = "OFF";
+                
+                showToast("Simulating Offline Mode", "Actions taken in PWA will run optimistically and queue in IndexedDB outbox.", "info");
+            }
+        }
+
+        // Onboarding Tier Switcher (Under-18 Privacy Loophole Bypass)
+        function selectOnboardingTier(tier) {
+            onboardingTier = tier;
+            let generatedUsername = "";
+            
+            if (tier === 1) {
+                // Tier 1 Child consent bypass -> Generate safe random pseudonyms
+                const prefixes = ["BalakaStar", "ChamboRunner", "PhalulaChampion", "LilongweYouth", "YaoProtector"];
+                const suffix = Math.floor(Math.random() * 90) + 10;
+                generatedUsername = prefixes[Math.floor(Math.random() * prefixes.length)] + suffix;
+                
+                showToast("Tier 1 Consent Shield Active", `No health records linked to your real identity. Generated safe handle: ${generatedUsername}`, "success");
+            } else {
+                generatedUsername = "YouthLeaderPlus";
+                showToast("Tier 2 Verified Account", "Access registered tools, periodically tracking safe boards, and SMS updates.", "info");
+            }
+
+            document.getElementById('home-welcome-user').innerText = `Logged in as: ${generatedUsername}`;
+            document.getElementById('screen-onboarding').classList.add('hidden');
+            document.getElementById('screen-workspace').classList.remove('hidden');
+        }
+
+        // PWA Nav switcher
+        function switchPwaTab(tabId) {
+            selectedPwaTab = tabId;
+            document.getElementById('section-home').classList.add('hidden');
+            document.getElementById('section-map').classList.add('hidden');
+            document.getElementById('section-chat').classList.add('hidden');
+            document.getElementById('section-report').classList.add('hidden');
+
+            document.getElementById('nav-btn-home').className = "flex flex-col items-center flex-1";
+            document.getElementById('nav-btn-map').className = "flex flex-col items-center flex-1";
+            document.getElementById('nav-btn-chat').className = "flex flex-col items-center flex-1";
+            document.getElementById('nav-btn-report').className = "flex flex-col items-center flex-1";
+
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-btn-${tabId}`).className = "flex flex-col items-center flex-1 text-oxfam";
+
+            if (tabId === 'map') {
+                updateMapMarkers();
+            }
+        }
+
+        // Discreet Mode Toggler
+        function toggleDiscreetMode() {
+            discreetMode = !discreetMode;
+            const title = document.getElementById('pwa-title');
+            const subtitle = document.getElementById('pwa-subtitle');
+            const header = document.getElementById('pwa-header');
+            const logo = document.getElementById('pwa-logo-container');
+            
+            // Article Titles Map to avoid explicit labels
+            const artCat1 = document.getElementById('art-cat-1');
+            const artTitle1 = document.getElementById('art-title-1');
+            const artDesc1 = document.getElementById('art-desc-1');
+            
+            const artCat2 = document.getElementById('art-cat-2');
+            const artTitle2 = document.getElementById('art-title-2');
+            const artDesc2 = document.getElementById('art-desc-2');
+
+            if (discreetMode) {
+                header.classList.remove('bg-oxfam');
+                header.classList.add('bg-slate-700');
+                title.innerText = "Youth Study Portal";
+                subtitle.innerText = "Secondary Biology Hub • Malawi";
+                logo.innerHTML = `<svg class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>`;
+                
+                // Hide Explicit SRHR Text with science metaphors
+                artCat1.innerText = "CELLULAR BIOLOGY";
+                artTitle1.innerText = "Human Reproduction & Cellular Mitosis";
+                artDesc1.innerText = "An elementary guide looking at modern biological concepts, cell dynamics, and physical science foundations.";
+                
+                artCat2.innerText = "SOCIAL SCIENCES";
+                artTitle2.innerText = "Demographics & Citizenship Ethics";
+                artDesc2.innerText = "Learn community structure development, demographic distributions, boundaries and historical ethics rules.";
+
+                showToast("Discreet Mode On", "All explicit SRHR headings changed to academic topics.", "info");
+            } else {
+                header.classList.add('bg-oxfam');
+                header.classList.remove('bg-slate-700');
+                title.innerText = "Youth Choice";
+                subtitle.innerText = "SRHR Safe Space • Malawi";
+                logo.innerHTML = `<svg class="w-4 h-4 text-oxfam" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>`;
+                
+                // Restore Explicit SRHR Text
+                artCat1.innerText = "Contraception Safe-space";
+                artTitle1.innerText = "Understanding Modern Contraception Methods";
+                artDesc1.innerText = "Exploring the facts about implants, pills, and condoms available safely and confidentially at local clinics near you.";
+                
+                artCat2.innerText = "My Body & Rights";
+                artTitle2.innerText = "Consent, Relationships, and Peer Groups";
+                artDesc2.innerText = "How to identify healthy boundaries, handle peer choices comfortably, and report any form of community harassment securely.";
+
+                showToast("Discreet Mode Off", "Standard SRHR headings restored.", "success");
+            }
+        }
+
+        // Quick Exit Mask Redirector
+        function triggerQuickExit() {
+            document.getElementById('screen-workspace').classList.add('hidden');
+            document.getElementById('screen-quickexit').classList.remove('hidden');
+            document.getElementById('pwa-header').classList.add('hidden');
+            showToast("Safety Cover Triggered", "Quick exit activated. Content masked with generic educational references.", "success");
+        }
+
+        function restoreFromExit() {
+            document.getElementById('screen-quickexit').classList.add('hidden');
+            document.getElementById('screen-workspace').classList.remove('hidden');
+            document.getElementById('pwa-header').classList.remove('hidden');
+        }
+
+        // Play Simulated Audio utilizing HTML5 Speech Synthesis
+        function playSimulatedAudio(textToRead) {
+            // Stop current speech
+            stopSimulatedAudio();
+
+            // Display Visual Audio Toast Player
+            const toast = document.getElementById('audio-toast');
+            const toastTitle = document.getElementById('audio-toast-title');
+            toast.classList.remove('hidden');
+            toastTitle.innerText = textToRead.substring(0, 30) + "...";
+
+            if (speechSynth) {
+                activeSpeechUtterance = new SpeechSynthesisUtterance(textToRead);
+                activeSpeechUtterance.rate = 0.95; // Friendly pace
+                activeSpeechUtterance.pitch = 1.1; // Youth Friendly tone
+                
+                activeSpeechUtterance.onend = function() {
+                    stopSimulatedAudio();
+                };
+                
+                speechSynth.speak(activeSpeechUtterance);
+            }
+        }
+
+        function stopSimulatedAudio() {
+            if (speechSynth) {
+                speechSynth.cancel();
+            }
+            document.getElementById('audio-toast').classList.add('hidden');
+        }
+
+        // Render Forum Board Thread with Optimistic Sync Flagging
+        function renderForumThread() {
+            const thread = document.getElementById('forum-thread-container');
+            thread.innerHTML = "";
+            
+            const posts = [...initialForumPosts];
+            
+            posts.forEach(post => {
+                const isPending = post.status === 'pending';
+                const pillColor = isPending ? 'border-amber-400 bg-amber-50' : 'border-slate-100 bg-slate-50';
+                const statusBadge = isPending 
+                    ? `<span class="inline-flex items-center text-[8px] font-semibold text-amber-600 animate-pulse">
+                        <svg class="w-2.5 h-2.5 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Pending Local Sync (IndexedDB)
+                       </span>`
+                    : `<span class="inline-flex items-center text-[8px] font-semibold text-emerald-600">
+                        <svg class="w-2.5 h-2.5 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        Synced to Cloud
+                       </span>`;
+
+                const cardHtml = `
+                    <div class="p-3 border rounded-xl shadow-xs transition ${pillColor}">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-extrabold text-slate-700">@${post.username}</span>
+                            <span class="text-[8px] text-slate-400">${post.timestamp}</span>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-normal">${post.message}</p>
+                        <div class="mt-2 pt-1.5 border-t border-slate-200/50 flex items-center justify-between">
+                            <span class="text-[8px] uppercase tracking-wider bg-slate-200 px-1 rounded text-slate-500 font-bold">${post.district}</span>
+                            ${statusBadge}
+                        </div>
+                    </div>
+                `;
+                thread.innerHTML += cardHtml;
+            });
+
+            // Scroll to bottom
+            thread.scrollTop = thread.scrollHeight;
+        }
+
+        // Submit message on forums
+        function submitForumPost() {
+            const input = document.getElementById('forum-message-input');
+            const messageText = input.value.trim();
+            if (!messageText) return;
+
+            const usernameElement = document.getElementById('home-welcome-user').innerText;
+            const username = usernameElement.replace("Logged in as: ", "") || "AnonymousYouth";
+            const district = document.getElementById('map-filter-district').value;
+
+            const newPost = {
+                id: Date.now(),
+                username: username,
+                message: messageText,
+                timestamp: "Just Now",
+                district: district.charAt(0).toUpperCase() + district.slice(1),
+                status: isOnline ? 'synced' : 'pending'
+            };
+
+            initialForumPosts.push(newPost);
+            renderForumThread();
+            input.value = "";
+
+            if (!isOnline) {
+                // Queue into outbox
+                outboxQueue.push({
+                    id: newPost.id,
+                    type: 'forum_post',
+                    payload: newPost,
+                    label: `Anonymous Forum Post: "${messageText.substring(0, 18)}..."`
+                });
+                updateOutboxUI();
+            } else {
+                // Automatically increment dashboard KPI rate for demo engagement
+                const valpwa = document.getElementById('bar-val-pwa');
+                const barpwa = document.getElementById('bar-pwa');
+                valpwa.innerText = "3,241 clicks";
+                barpwa.style.width = "66%";
+                showToast("Forum post live", "Successfully stored in PostgreSQL and pushed to Metabase.", "success");
+            }
+        }
+
+        // Map updates
+        function updateMapMarkers() {
+            const district = document.getElementById('map-filter-district').value;
+            const container = document.getElementById('map-pins-container');
+            const boundaryPath = document.getElementById('map-boundary-path');
+            
+            container.innerHTML = "";
+
+            // Change vector map shape to illustrate dynamic district change
+            if (district === 'lilongwe') {
+                boundaryPath.setAttribute('d', 'M 15 20 Q 40 40 85 15 T 70 85 T 20 75 Z');
+            } else {
+                boundaryPath.setAttribute('d', 'M 10 30 Q 35 10 60 25 T 90 70 T 40 90 Z');
+            }
+
+            const markers = mapMarkers[district];
+            markers.forEach(marker => {
+                const dotHtml = `
+                    <button onclick="selectMapFacility('${district}', ${marker.id})" class="absolute transform -translate-x-1/2 -translate-y-1/2 focus:outline-none group" style="left: ${marker.x}%; top: ${marker.y}%;">
+                        <div class="relative">
+                            <span class="absolute inline-flex h-4 w-4 rounded-full bg-oxfam opacity-50 animate-ping"></span>
+                            <div class="w-3.5 h-3.5 bg-oxfam border border-white rounded-full flex items-center justify-center shadow-lg transition transform group-hover:scale-125"></div>
+                        </div>
+                    </button>
+                `;
+                container.innerHTML += dotHtml;
+            });
+        }
+
+        function selectMapFacility(district, id) {
+            const marker = mapMarkers[district].find(m => m.id === id);
+            if (!marker) return;
+
+            document.getElementById('facility-card-placeholder').classList.add('hidden');
+            const content = document.getElementById('facility-card-content');
+            content.classList.remove('hidden');
+
+            document.getElementById('fac-name').innerText = marker.name;
+            document.getElementById('fac-location').innerText = `TA ${marker.ta.toUpperCase()} • Near Central Trading Post`;
+            
+            const badges = ['Youth Friendly Support', 'Family Planning Hub', 'Zero Stigma Zone'];
+            document.getElementById('fac-badge').innerText = badges[marker.id % badges.length];
+
+            const implants = document.getElementById('fac-implant-status');
+            const pills = document.getElementById('fac-pills-status');
+            const condoms = document.getElementById('fac-condoms-status');
+
+            implants.innerText = marker.implants;
+            implants.className = `text-[9px] font-extrabold ${marker.implants === 'IN STOCK' ? 'text-emerald-600' : 'text-canada'}`;
+
+            pills.innerText = marker.pills;
+            pills.className = `text-[9px] font-extrabold ${marker.pills === 'IN STOCK' ? 'text-emerald-600' : 'text-canada'}`;
+
+            condoms.innerText = marker.condoms;
+            condoms.className = `text-[9px] font-extrabold ${marker.condoms === 'IN STOCK' ? 'text-emerald-600' : 'text-canada'}`;
+        }
+
+        // Barrier Issues styling toggles
+        function selectBarrierIssue(issue) {
+            selectedBarrierIssue = issue;
+            document.getElementById('form-barrier-issue').value = issue;
+            
+            const buttons = document.getElementsByClassName('issue-pill-btn');
+            for (let btn of buttons) {
+                if (btn.innerText.includes(issue)) {
+                    btn.className = "issue-pill-btn p-2 border-2 rounded-lg text-left text-xs transition border-oxfam bg-emerald-50 text-oxfam font-bold";
+                } else {
+                    btn.className = "issue-pill-btn p-2 border rounded-lg text-left text-xs transition border-slate-200 hover:border-oxfam bg-slate-50";
+                }
+            }
+        }
+
+        // Handle Access Barrier Submissions
+        function submitBarrierReport(event) {
+            event.preventDefault();
+
+            const district = document.getElementById('form-barrier-district').value;
+            const landmark = document.getElementById('form-barrier-landmark').value;
+            const details = document.getElementById('form-barrier-details').value;
+
+            if (!selectedBarrierIssue || !district || !landmark) {
+                showToast("Missing Fields", "Please select a specific issue and input location details.", "error");
+                return;
+            }
+
+            const newReport = {
+                id: Date.now(),
+                district: district,
+                location: landmark,
+                issue: selectedBarrierIssue,
+                status: isOnline ? 'Investigating' : 'pending_outbox',
+                details: details || "No descriptions provided anonymously."
+            };
+
+            initialBarrierReports.unshift(newReport);
+            
+            if (!isOnline) {
+                outboxQueue.push({
+                    id: newReport.id,
+                    type: 'barrier_report',
+                    payload: newReport,
+                    label: `Barrier Report: [${selectedBarrierIssue}] at ${landmark}`
+                });
+                updateOutboxUI();
+                showToast("Saved Locally in Queue", "No network detected. Your safety report is securely cached in browser IndexedDB.", "info");
+            } else {
+                showToast("Report Submitted Securely", "Encounter logged! Your anonymous report has been piped to Metabase BI metrics.", "success");
+            }
+
+            // Reset Form
+            document.getElementById('barrier-form').reset();
+            const buttons = document.getElementsByClassName('issue-pill-btn');
+            for (let btn of buttons) {
+                btn.className = "issue-pill-btn p-2 border rounded-lg text-left text-xs transition border-slate-200 hover:border-oxfam bg-slate-50";
+            }
+            selectedBarrierIssue = "";
+            document.getElementById('form-barrier-issue').value = "";
+
+            renderDashboardBarriers();
+        }
+
+        // Render Sync Queue details
+        function updateOutboxUI() {
+            const countBadge = document.getElementById('queue-badge-count');
+            const list = document.getElementById('outbox-queue-items');
+            
+            countBadge.innerText = `${outboxQueue.length} queued`;
+            
+            if (outboxQueue.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center text-slate-400 py-6 text-[11px]">
+                        Outbox empty. Connect to offline mode to queue diagnostic actions.
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = "";
+            outboxQueue.forEach(job => {
+                const jobHtml = `
+                    <div class="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                        <div class="flex items-center space-x-1.5 truncate">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span class="font-bold text-[10px] text-slate-600 truncate">${job.label}</span>
+                        </div>
+                        <span class="text-[8px] bg-amber-100 text-amber-800 font-extrabold px-1.5 rounded uppercase">Outbox</span>
+                    </div>
+                `;
+                list.innerHTML += jobHtml;
+            });
+        }
+
+        // Sync Outbox items when Network switches to Online
+        function syncOutboxQueue() {
+            if (outboxQueue.length === 0) return;
+
+            showToast("Reconnected!", "Syncing cached outbox jobs to Metabase server...", "info");
+
+            setTimeout(() => {
+                outboxQueue.forEach(job => {
+                    // Update PWA status
+                    if (job.type === 'forum_post') {
+                        const post = initialForumPosts.find(p => p.id === job.id);
+                        if (post) post.status = 'synced';
+                    } else if (job.type === 'barrier_report') {
+                        const report = initialBarrierReports.find(r => r.id === job.id);
+                        if (report) report.status = 'Actioned';
+                    }
+                });
+
+                // Clear Queue
+                outboxQueue.length = 0;
+                updateOutboxUI();
+                renderForumThread();
+                renderDashboardBarriers();
+
+                // Increment dashboard KPI
+                const actUsers = document.getElementById('kpi-active-users');
+                const syn = document.getElementById('kpi-syncs');
+                actUsers.innerText = "4,821";
+                syn.innerText = "12,156";
+
+                showToast("Synchronization Complete", "All local browser outbox data successfully updated to cloud BI system.", "success");
+            }, 1800);
+        }
+
+        // Render Dashboard Rows with Row Level Security Filter Check
+        function renderDashboardBarriers() {
+            const container = document.getElementById('dashboard-barrier-rows');
+            container.innerHTML = "";
+
+            let reports = [...initialBarrierReports];
+
+            // Apply Row-Level Security Rules
+            if (currentRlsRole === 'balaka') {
+                reports = reports.filter(r => r.district.toLowerCase() === 'balaka');
+            } else if (currentRlsRole === 'lilongwe') {
+                reports = reports.filter(r => r.district.toLowerCase() === 'lilongwe');
+            }
+
+            // Total counters
+            document.getElementById('kpi-barriers').innerText = reports.length;
+
+            if (reports.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-4 text-center text-slate-400 text-[11px]">No access barriers mapped for this security context.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            reports.forEach(r => {
+                let badgeClass = "bg-amber-100 text-amber-800";
+                if (r.status === 'Actioned') badgeClass = "bg-emerald-100 text-emerald-800";
+                if (r.status === 'Investigating') badgeClass = "bg-blue-100 text-blue-800";
+
+                const rowHtml = `
+                    <tr class="hover:bg-slate-50 border-b border-slate-100">
+                        <td class="py-2.5 font-bold text-slate-800">${r.district}</td>
+                        <td class="py-2.5 text-slate-500">${r.location}</td>
+                        <td class="py-2.5 font-semibold text-slate-700">${r.issue}</td>
+                        <td class="py-2.5">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${badgeClass}">${r.status}</span>
+                        </td>
+                    </tr>
+                `;
+                container.innerHTML += rowHtml;
+            });
+        }
+
+        // Apply RLS Filtering selector
+        function applyRLSFilter() {
+            currentRlsRole = document.getElementById('dashboard-rls-role').value;
+            document.getElementById('rls-current-indicator').innerText = currentRlsRole;
+            renderDashboardBarriers();
+            
+            showToast("Row-Level Security Updated", `Dashboard data dynamically filtered to ${currentRlsRole.toUpperCase()} records.`, "success");
+        }
+
+        // Simulate random mock USSD Alert incoming
+        function simulateMockAlert() {
+            const list = [
+                { district: 'Balaka', location: 'Liwonde Clinic', issue: 'Product Stock-out', status: 'Pending Review', details: 'USSD stock post: Zero Condoms left.' },
+                { district: 'Lilongwe', location: 'Kabudula Unit', issue: 'Bribe Demand', status: 'Pending Review', details: 'Anonymous USSD dialer: clinical fees requested.' }
+            ];
+
+            const choice = list[Math.floor(Math.random() * list.length)];
+            const newReport = {
+                id: Date.now(),
+                ...choice
+            };
+
+            initialBarrierReports.unshift(newReport);
+            renderDashboardBarriers();
+
+            showToast("USSD Gateway Ingest", `New cell alert registered from ${choice.location}!`, "info");
+        }
+
+        // Toast Helper mapping to custom modal interface (eliminating native browser alerts)
+        function showToast(title, message, type) {
+            const modal = document.getElementById('custom-modal-backdrop');
+            const header = document.getElementById('modal-header-container');
+            const mTitle = document.getElementById('modal-title');
+            const mMessage = document.getElementById('modal-message');
+
+            mTitle.innerText = title;
+            mMessage.innerText = message;
+
+            if (type === 'success') {
+                header.className = "flex items-center space-x-2.5 text-emerald-600";
+                header.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><h3 class="font-bold text-slate-800 text-sm sm:text-base">${title}</h3>`;
+            } else if (type === 'error') {
+                header.className = "flex items-center space-x-2.5 text-canada";
+                header.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg><h3 class="font-bold text-slate-800 text-sm sm:text-base">${title}</h3>`;
+            } else {
+                header.className = "flex items-center space-x-2.5 text-blue-500";
+                header.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><h3 class="font-bold text-slate-800 text-sm sm:text-base">${title}</h3>`;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal-backdrop').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
