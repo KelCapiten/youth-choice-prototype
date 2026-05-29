@@ -125,6 +125,79 @@ const barrierDetails = ref('');
 let speechSynth = typeof window !== 'undefined' ? window.speechSynthesis : null;
 let activeUtterance = null;
 
+// Dynamic articles expanded reading state
+const activeArticle = ref(null);
+
+const articles = ref([
+  {
+    id: 1,
+    category: 'CONTRACEPTION HEALTH',
+    categoryDiscreet: 'CELLULAR SCIENCE',
+    title: 'Understanding Modern Contraception Options',
+    titleDiscreet: 'Human Reproduction & Mitosis Studies',
+    readTime: '3 min',
+    summary: 'Get accurate facts about long-acting implants, pills, and barrier protection methods available safely and confidentially at local units.',
+    summaryDiscreet: 'A deep look at cell divisions, mitosis phases, chromosome replication patterns, and foundational secondary biology concepts.',
+    content: 'Contraceptive options are widely available in Malawi catchment clinics. Implants are tiny flexible rods inserted under the skin of the upper arm, providing highly effective protection for up to 3 to 5 years. Oral contraceptive pills are taken daily. Condoms offer dual protection by preventing both pregnancy and Sexually Transmitted Infections (STIs). You have the complete right to access these services safely, confidentially, and free from stigma at Phalula, Nkaya, Area 25, or Kabudula health units.',
+    contentDiscreet: 'Cell division is fundamental to life. Mitosis is a cellular process where a single cell divides into two identical daughter cells, duplicating chromosomes for growth and repair. In human biology, reproductive cells undergo meiosis, reducing the chromosome count to 23. Understanding these foundational cellular replication processes is key to passing secondary school biology exit examinations.',
+    audioText: 'Understanding Modern Contraception. Implants and pills are distributed for free at youth-friendly health units in Balaka and Lilongwe.',
+    audioTextDiscreet: 'Cell division guide. Mitosis is a cellular process that duplicates chromosomes.'
+  },
+  {
+    id: 2,
+    category: 'BODY RIGHTS & RELATIONSHIPS',
+    categoryDiscreet: 'SOCIAL ECOLOGY',
+    title: 'Healthy Consent, Boundaries, and Peer Choices',
+    titleDiscreet: 'Demographics & Citizen Social Ethics',
+    readTime: '2 min',
+    summary: 'How to communicate comfort zones, handle social pressure safely, and secure confidential advice about rights and protection.',
+    summaryDiscreet: 'A structural study mapping community systems, regional boundaries, local trading indicators, and secondary civic studies.',
+    content: 'Healthy relationships are built on clear communication, mutual respect, and explicit consent. Consent means agreeing to something freely and clearly, without pressure, force, or fear. You always have the absolute right to set boundaries for your body, say "no" at any point, and expect your decisions to be respected. Talk to friendly, zero-stigma youth advocates or dial the 811 toll-free hotline if you ever feel pressured or need private support.',
+    contentDiscreet: 'Social ecology involves studying how individuals interact with their local communities and environments. Malawi is structured into districts (such as Balaka and Lilongwe) and traditional authorities (TAs). Understanding civil organization, community guidelines, environmental protection standards, and social ethics forms a core pillar of civic and social studies.',
+    audioText: 'Consent and bodies. Every youth has the right to declare boundaries and make confidential choices.',
+    audioTextDiscreet: 'Social ecology module. Learning about community structures and district boundaries.'
+  },
+  {
+    id: 3,
+    category: 'WELLNESS & STIGMA DEFEAT',
+    categoryDiscreet: 'PSYCHOLOGY & BEHAVIOR',
+    title: 'Overcoming Stigma: You Deserve Care',
+    titleDiscreet: 'Cognitive Patterns & Stress Response',
+    readTime: '4 min',
+    summary: 'Adolescent health services are confidential. Learn your legal rights to medical care under Malawi DPA regulations.',
+    summaryDiscreet: 'A scientific analysis of human stress responses, hormonal triggers, mental wellness strategies, and cognitive habits.',
+    content: 'Many young adolescents fear visiting clinics due to worries about being lectured or seen by community members. However, Malawian law guarantees confidential health care. Health workers are trained to offer youth-friendly health services (YFHS) designed to be highly confidential and supportive. You always have the right to receive medical care privately, and any breach of confidentiality can be reported safely.',
+    contentDiscreet: 'Stress responses are regulated by the endocrine system, releasing hormones like cortisol and adrenaline. When facing social stressors, individuals activate biological coping mechanisms. Cognitive-behavioral studies show that positive coping habits, supportive peer networks, and seeking counseling help regulate stress levels and maintain balanced mental health.',
+    audioText: 'Overcoming stigma. You have the full legal right to confidential, zero-stigma reproductive health services at any clinic.',
+    audioTextDiscreet: 'Psychology guide. Stress response systems release hormones that regulate our biological systems under pressure.'
+  }
+]);
+
+const upcomingEvents = ref([
+  {
+    id: 1,
+    title: 'Adolescent Wellness Workshop',
+    titleDiscreet: 'Biological Systems Presentation',
+    date: 'Saturday, June 6',
+    time: '9:00 AM',
+    location: 'Phalula Youth Unit, Balaka',
+    locationDiscreet: 'Secondary School Classroom, Balaka',
+    desc: 'Join peer mentors and zero-stigma counselors for a fun day of biology trivia, free wellness checkups, and confidential advice.',
+    descDiscreet: 'An academic review of biological systems, environmental science parameters, and secondary final preparation exit prep.'
+  },
+  {
+    id: 2,
+    title: 'Youth Choice Chat Live session',
+    titleDiscreet: 'Academic Group Discussion Panel',
+    date: 'Wednesday, June 10',
+    time: '2:00 PM',
+    location: 'Ask Peers Chat Tab (Online)',
+    locationDiscreet: 'Academic Chat Forums (Online)',
+    desc: 'A live group discussion inside the chat panel with regional peer advisors discussing reproductive biology wellness.',
+    descDiscreet: 'A live academic chat forum to study demographics, social ethics, cell cycles, and environmental metrics.'
+  }
+]);
+
 // Local Data Models (Re-populated and reacted to)
 const forumPosts = ref([
   { id: 101, username: 'BalakaStar77', message: 'Hello, is the youth friendly clinic open at Phalula today?', timestamp: '10:14 AM', district: 'Balaka', status: 'synced' },
@@ -422,8 +495,8 @@ const handleNavClick = (tab) => {
           <!-- STEP 1: Select Onboarding Tier Mode -->
           <div v-if="onboardingStep === 1" style="display:flex; flex-direction:column; gap:1.25rem; width:100%;">
             <div>
-              <h3 style="font-size: 1.4rem; margin-bottom: 0.25rem;">Ndiwe Olandilidwa!</h3>
-              <p style="font-size: 0.75rem; color: var(--charcoal-600);">Welcome to your secure digital safe space for adolescent wellness and guidance.</p>
+              <h3 style="font-size: 1.4rem; margin-bottom: 0.25rem;">Ndiwe Olandilidwa! 🌟</h3>
+              <p style="font-size: 0.75rem; color: var(--charcoal-600);">Welcome to your safe secret space! Learn about your body, ask anonymous questions, and get helpful support with zero judgment. 🌸</p>
             </div>
 
             <div class="legal-badge">
@@ -431,22 +504,22 @@ const handleNavClick = (tab) => {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
               <div>
-                <strong style="font-size: 0.7rem; display:block;">🔒 100% Private & Safe Space</strong>
-                <span style="font-size: 0.6rem; line-height: 1.2;">We keep your secrets safe! Choosing Tier 1 requires zero real names, no phone numbers, and absolutely no parent signatures.</span>
+                <strong style="font-size: 0.7rem; display:block;">🤫 Your Secrets are 100% Safe!</strong>
+                <span style="font-size: 0.6rem; line-height: 1.2;">No phone numbers or parent signatures needed for Tier 1. Under 18? You can enter instantly and completely anonymously!</span>
               </div>
             </div>
 
             <div style="width: 100%; display:flex; flex-direction:column; gap: 0.75rem;">
               <!-- Tier 1 Select -->
               <button @click="handleOnboarding(1)" class="onboarding-btn">
-                <h4>Tier 1: 100% Anonymous <span class="badge-tag">Under 18</span></h4>
-                <p>Get in instantly! No real names, no phone number tracking. We give you a fun secure secret nickname.</p>
+                <h4>Instantly Anonymous (Super Safe!) 🤫</h4>
+                <p>Under 18? Get in immediately! No phone number or real name needed. We will give you a cool secret nickname!</p>
               </button>
 
               <!-- Tier 2 Select -->
               <button @click="handleOnboarding(2)" class="onboarding-btn">
-                <h4>Tier 2: Registered Access <span class="badge-tag blue">Over 18</span></h4>
-                <p>Get helpful private SMS updates, post on community forums, and track your wellness journey.</p>
+                <h4>Private Updates Club (Registered) 💌</h4>
+                <p>Over 18? Get private SMS helpful reminders, ask questions in the forums, and map your health journey.</p>
               </button>
             </div>
           </div>
@@ -454,9 +527,9 @@ const handleNavClick = (tab) => {
           <!-- STEP 2: Biometric Fingerprint scan registration (Tier 1 anonymized lock setup) -->
           <div v-else-if="onboardingStep === 2" class="biometric-screen-wrap" style="width:100%; border-radius:16px;">
             <div>
-              <h3 style="color:#fff; font-size:1.2rem;">Set Up Finger Lock</h3>
+              <h3 style="color:#fff; font-size:1.2rem;">Secure Your Secret Vault! 🔒</h3>
               <p style="font-size:0.65rem; color:var(--charcoal-600); margin-top:2px;">
-                Lock your app using your finger scan so that your health logs and chats stay 100% private to you!
+                Lock your app with a secret finger tap so friends and family can never open it. Keep it 100% private to you!
               </p>
             </div>
 
@@ -475,7 +548,7 @@ const handleNavClick = (tab) => {
             </div>
 
             <p style="font-size:0.7rem; color:var(--charcoal-200); font-weight:700;">
-              {{ isScanning ? 'Registering biometric pattern...' : 'Touch sensor to enroll thumbprint' }}
+              {{ isScanning ? 'Setting up your private vault...' : 'Tap the sensor to lock your app!' }}
             </p>
 
             <div class="setup-progress-dots">
@@ -487,41 +560,41 @@ const handleNavClick = (tab) => {
 
           <!-- STEP 3: Tier 2 Registered Portal configuration -->
           <div v-else-if="onboardingStep === 3" style="width:100%; text-align: left;" class="pwa-card">
-            <h4 style="font-size:0.75rem; margin-bottom: 0.5rem; text-transform: uppercase;">Register Verified Account</h4>
+            <h4 style="font-size:0.75rem; margin-bottom: 0.5rem; text-transform: uppercase;">Join the Club! 💌</h4>
             <div style="display:flex; flex-direction:column; gap:0.5rem;">
-              <input v-model="registeredPhone" type="tel" placeholder="Phone (+265...)" class="chat-field" />
+              <input v-model="registeredPhone" type="tel" placeholder="Enter Phone Number (+265...)" class="chat-field" />
               
               <select v-model="registeredDistrict" class="map-control-select">
-                <option value="">Select District</option>
+                <option value="">Choose District</option>
                 <option value="Balaka">Balaka</option>
                 <option value="Lilongwe">Lilongwe</option>
               </select>
 
               <select v-model="registeredAge" class="map-control-select">
-                <option value="">Select Birth Year</option>
+                <option value="">What year were you born? 🎂</option>
                 <option v-for="year in birthYears" :key="year" :value="year">{{ year }}</option>
               </select>
 
-              <input v-model="registeredPin" type="password" maxlength="4" placeholder="Create 4-Digit PIN" class="chat-field" style="letter-spacing: 0.35rem; text-align: center;" />
+              <input v-model="registeredPin" type="password" maxlength="4" placeholder="Choose 4-Digit Secret PIN" class="chat-field" style="letter-spacing: 0.35rem; text-align: center;" />
 
               <label style="display:flex; align-items:center; gap:0.5rem; margin: 0.25rem 0; cursor:pointer;">
                 <input v-model="registeredConsent" type="checkbox" style="width: 14px; height: 14px;" />
                 <span style="font-size:0.58rem; color:var(--charcoal-600); line-height:1.2;">
-                  I give explicit Section 16 written consent for Oxfam's digital privacy standards and secure SMS updates.
+                  I agree to keep this a safe, supportive, and private space for myself and others.
                 </span>
               </label>
 
               <button @click="completeRegisteredOnboarding" class="barrier-submit-btn" style="background-color: var(--oxfam-green);">
-                Proceed to Biometric Setup
+                Next: Set Up Secret Finger Lock
               </button>
             </div>
           </div>
-      </div>
+        </div>
 
-      <!-- ==========================================
-           SCREEN: MOCK BIOMETRIC SCANNER (LOCKED STATE)
-           ========================================== -->
-      <div v-else-if="isBiometricLocked && isBiometricSetup" class="biometric-screen-wrap" style="width:100%; border-radius:16px;">
+        <!-- ==========================================
+             SCREEN: MOCK BIOMETRIC SCANNER (LOCKED STATE)
+             ========================================== -->
+        <div v-else-if="isBiometricLocked && isBiometricSetup" class="biometric-screen-wrap" style="width:100%; border-radius:16px;">
           <div style="margin-top:2rem;">
             <svg style="width:36px; height:36px; color:var(--oxfam-green); margin-bottom: 0.5rem;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
@@ -627,82 +700,114 @@ const handleNavClick = (tab) => {
                </div>
              </div>
 
-            <!-- Articles Deck -->
-            <!-- Article 1 -->
-            <div class="pwa-card">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.25rem;">
-                <span style="font-size: 0.6rem; font-weight:800; color: var(--oxfam-green);" v-if="!discreetMode">
-                  CONTRACEPTION HEALTH
-                </span>
-                <span style="font-size: 0.6rem; font-weight:800; color: var(--oxfam-green);" v-else>
-                  CELLULAR SCIENCE
-                </span>
-                <span style="font-size:0.55rem; color: var(--charcoal-600); background-color: var(--charcoal-100); padding: 1px 4px; border-radius:3px;">
-                  3 min
-                </span>
-              </div>
-              
-              <h4 style="font-size: 0.8rem; margin-bottom: 0.25rem;">
-                {{ discreetMode ? 'Human Reproduction & Mitosis Studies' : 'Understanding Modern Contraception Options' }}
-              </h4>
-              <p style="font-size: 0.65rem; color: var(--charcoal-600); line-height: 1.4;">
-                {{ discreetMode 
-                  ? 'A deep look at cell divisions, mitosis phases, chromosome replication patterns, and foundational secondary biology concepts.'
-                  : 'Get accurate facts about long-acting implants, pills, and barrier protection methods available safely and confidentially at local units.' 
-                }}
-              </p>
+             <!-- Expanded Article Detail Reading panel -->
+             <div v-if="activeArticle" class="pwa-card" style="border-color: var(--oxfam-green); animation: popIn 0.3s ease; display:flex; flex-direction:column; gap:0.5rem;">
+               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.25rem;">
+                 <span style="font-size: 0.55rem; font-weight:800; color: var(--oxfam-green); text-transform:uppercase;">
+                   {{ discreetMode ? activeArticle.categoryDiscreet : activeArticle.category }}
+                 </span>
+                 <button @click="activeArticle = null; stopAudio()" class="inject-btn" style="padding:2px 6px; font-size:0.55rem; font-weight:800; color:var(--gac-red); cursor:pointer;">
+                   ✕ Back
+                 </button>
+               </div>
+               
+               <h3 style="font-size:0.85rem; margin-bottom:0.25rem; text-align:left; color:var(--charcoal-900);">
+                 {{ discreetMode ? activeArticle.titleDiscreet : activeArticle.title }}
+               </h3>
+               
+               <div style="font-size:0.65rem; line-height:1.45; text-align:left; color:var(--charcoal-800); margin-bottom:0.5rem; border-top:1px solid var(--charcoal-100); padding-top:0.4rem;">
+                 {{ discreetMode ? activeArticle.contentDiscreet : activeArticle.content }}
+               </div>
 
-              <div class="audio-action-row">
-                <button 
-                  @click="speakArticle(discreetMode ? 'Cell division guide. Mitosis is a cellular process that duplicates chromosomes.' : 'Understanding Modern Contraception. Implants and pills are distributed for free at youth-friendly health units in Lilongwe.')"
-                  class="play-audio-btn"
-                >
-                  <svg style="width:12px; height:12px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/>
-                  </svg>
-                  <span>Mvetserani (Listen Audio)</span>
-                </button>
-                <span style="font-size: 0.55rem; color: var(--charcoal-600);">Yao & Chichewa Supported</span>
-              </div>
-            </div>
+               <!-- Audio Player trigger inside article details -->
+               <div class="audio-action-row" style="margin-top:0.25rem; border-top:1px solid var(--charcoal-100); padding-top:0.4rem;">
+                 <button 
+                   @click="speakArticle(discreetMode ? activeArticle.audioTextDiscreet : activeArticle.audioText)"
+                   class="play-audio-btn"
+                 >
+                   <svg style="width:12px; height:12px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/>
+                   </svg>
+                   <span>Mvetserani (Listen Audio)</span>
+                 </button>
+                 <span style="font-size:0.55rem; color:var(--charcoal-600);">Audio Support Active</span>
+               </div>
+             </div>
 
-            <!-- Article 2 -->
-            <div class="pwa-card">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.25rem;">
-                <span style="font-size: 0.6rem; font-weight:800; color: var(--oxfam-green);" v-if="!discreetMode">
-                  BODY RIGHTS & RELATIONSHIPS
-                </span>
-                <span style="font-size: 0.6rem; font-weight:800; color: var(--oxfam-green);" v-else>
-                  SOCIAL ECOLOGY
-                </span>
-                <span style="font-size:0.55rem; color: var(--charcoal-600); background-color: var(--charcoal-100); padding: 1px 4px; border-radius:3px;">
-                  2 min
-                </span>
-              </div>
-              
-              <h4 style="font-size: 0.8rem; margin-bottom: 0.25rem;">
-                {{ discreetMode ? 'Demographics & Citizen Social Ethics' : 'Healthy Consent, Boundaries, and Peer Choices' }}
-              </h4>
-              <p style="font-size: 0.65rem; color: var(--charcoal-600); line-height: 1.4;">
-                {{ discreetMode 
-                  ? 'A structural study mapping community systems, regional boundaries, local trading indicators, and secondary civic studies.'
-                  : 'How to communicate comfort zones, handle social pressure safely, and secure confidential advice about rights and protection.' 
-                }}
-              </p>
+             <!-- Dynamic Articles & Upcoming Events List -->
+             <div v-else style="display:flex; flex-direction:column; gap:0.85rem;">
+               
+               <!-- Articles List Header -->
+               <div style="text-align: left; margin-bottom: -0.25rem;">
+                 <h4 style="font-size:0.7rem; font-weight:800; text-transform:uppercase; color:var(--charcoal-800); border-bottom:1px solid var(--charcoal-200); padding-bottom: 2px;">
+                   {{ discreetMode ? 'Biology Science Library' : 'Interactive Health Library' }}
+                 </h4>
+               </div>
 
-              <div class="audio-action-row">
-                <button 
-                  @click="speakArticle(discreetMode ? 'Social ecology module. Learning about community structures and district boundaries.' : 'Consent and bodies. Every youth has the right to declare boundaries and make confidential choices.')"
-                  class="play-audio-btn"
-                >
-                  <svg style="width:12px; height:12px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/>
-                  </svg>
-                  <span>Mvetserani (Listen Audio)</span>
-                </button>
-                <span style="font-size: 0.55rem; color: var(--charcoal-600);">Yao & Chichewa Supported</span>
-              </div>
-            </div>
+               <!-- Article card loop components -->
+               <div 
+                 v-for="article in articles" 
+                 :key="article.id" 
+                 @click="activeArticle = article; emit('pwa-click')"
+                 class="pwa-card" 
+                 style="cursor: pointer; transition:all 0.2s;"
+               >
+                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.25rem;">
+                   <span style="font-size: 0.58rem; font-weight:800; color: var(--oxfam-green);">
+                     {{ discreetMode ? article.categoryDiscreet : article.category }}
+                   </span>
+                   <span style="font-size:0.52rem; color: var(--charcoal-600); background-color: var(--charcoal-100); padding: 1px 4px; border-radius:3px;">
+                     {{ article.readTime }}
+                   </span>
+                 </div>
+                 
+                 <h4 style="font-size: 0.78rem; margin-bottom: 0.25rem; color:var(--charcoal-900); text-align:left;">
+                   {{ discreetMode ? article.titleDiscreet : article.title }}
+                 </h4>
+                 <p style="font-size: 0.65rem; color: var(--charcoal-600); line-height: 1.35; text-align:left; margin:0;">
+                   {{ discreetMode ? article.summaryDiscreet : article.summary }}
+                 </p>
+                 
+                 <div style="display:flex; justify-content:flex-end; margin-top:0.4rem; font-size:0.55rem; color:var(--oxfam-green); font-weight:800;">
+                   <span>Read Article ➔</span>
+                 </div>
+               </div>
+
+               <!-- Upcoming Events Section -->
+               <div style="text-align: left; margin: 0.25rem 0 -0.25rem 0;">
+                 <h4 style="font-size:0.7rem; font-weight:800; text-transform:uppercase; color:var(--charcoal-800); border-bottom:1px solid var(--charcoal-200); padding-bottom: 2px;">
+                   {{ discreetMode ? 'Academic Group Calendars' : 'Upcoming Community Events' }}
+                 </h4>
+               </div>
+
+               <div 
+                 v-for="evt in upcomingEvents" 
+                 :key="evt.id" 
+                 class="pwa-card" 
+                 style="border-color:var(--charcoal-200); display:flex; gap:0.5rem; align-items:center; padding: 0.75rem;"
+               >
+                 <!-- Calendar Date stamp stamp -->
+                 <div style="background-color: var(--oxfam-green-light); border:1px solid var(--oxfam-green); border-radius:8px; padding:0.4rem 0.25rem; display:flex; flex-direction:column; justify-content:center; align-items:center; width:50px; height:50px; flex-shrink:0;">
+                   <span style="font-size:0.5rem; font-weight:800; color:var(--oxfam-green-dark); text-transform:uppercase;">JUN</span>
+                   <span style="font-size:0.95rem; font-weight:900; color:var(--oxfam-green-dark); line-height:1;">{{ evt.date.split(' ').pop() }}</span>
+                 </div>
+
+                 <!-- Event details text -->
+                 <div style="text-align:left; flex:1;">
+                   <h5 style="font-size:0.72rem; font-weight:800; color:var(--charcoal-900); margin-bottom:2px;">
+                     {{ discreetMode ? evt.titleDiscreet : evt.title }}
+                   </h5>
+                   <div style="font-size:0.58rem; color:var(--charcoal-600); margin-bottom:3px; display:flex; gap:0.4rem; font-weight:600;">
+                     <span>🕒 {{ evt.time }}</span>
+                     <span>📍 {{ discreetMode ? evt.locationDiscreet : evt.location }}</span>
+                   </div>
+                   <p style="font-size:0.6rem; color:var(--charcoal-600); line-height:1.25; margin:0;">
+                     {{ discreetMode ? evt.descDiscreet : evt.desc }}
+                   </p>
+                 </div>
+               </div>
+
+             </div>
 
           </div>
 
@@ -796,11 +901,37 @@ const handleNavClick = (tab) => {
             </div>
 
             <!-- Clicked Facility Card HUD -->
-            <div class="pwa-card" style="border-color: var(--charcoal-200);">
-              <div v-if="selectedFacility === null" style="text-align:center; padding: 0.5rem 0;">
-                <p style="font-size:0.65rem; color:var(--charcoal-600); font-weight:600;">
-                  📍 Beating Heart services locator. Tap a marker to dynamically draw walking directions from TA landmarks and see operational supplies.
-                </p>
+            <div class="pwa-card" style="border-color: var(--charcoal-200); padding: 0.85rem;">
+              <div v-if="selectedFacility === null" style="text-align: left; display:flex; flex-direction:column; gap:0.6rem;">
+                <div>
+                  <h4 style="font-size:0.75rem; font-weight:800; text-transform:uppercase; color:var(--oxfam-green-dark); margin-bottom:2px;">
+                    🗺️ Catchment Health Directory
+                  </h4>
+                  <p style="font-size:0.62rem; color:var(--charcoal-600); line-height:1.25; margin:0;">
+                    Select a facility directly from the local directory below, or tap any coordinate marker pin on the vector map above to inspect live supplies:
+                  </p>
+                </div>
+
+                <!-- Dynamic clinics directory listings based on active district selection -->
+                <div style="display:flex; flex-direction:column; gap:0.4rem; max-height: 180px; overflow-y:auto;">
+                  <div 
+                    v-for="facility in mapFacilities[selectedDistrict]" 
+                    :key="facility.id" 
+                    @click="selectedFacility = facility; emit('pwa-click')"
+                    class="stock-box" 
+                    style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0.5rem; text-align:left; cursor:pointer; background-color:#fff; border:1px solid var(--charcoal-200); border-radius:6px; transition:all 0.2s;"
+                  >
+                    <div>
+                      <span style="font-size:0.68rem; font-weight:800; color:var(--charcoal-900); display:block;">{{ facility.name }}</span>
+                      <span style="font-size:0.58rem; color:var(--charcoal-600);">T.A. {{ facility.ta.toUpperCase() }} • {{ facility.type }}</span>
+                    </div>
+                    <span style="font-size:0.55rem; color:var(--oxfam-green); font-weight:800;">View ➔</span>
+                  </div>
+                </div>
+
+                <div style="background-color: var(--oxfam-green-light); border: 1px solid var(--oxfam-green); border-radius:8px; padding:0.35rem 0.5rem; font-size:0.58rem; color:var(--oxfam-green-dark); line-height:1.25;">
+                  ℹ️ **Youth Friendly Health Services (YFHS)**: All catchment units mapped above provide free, private, and confidential reproductive health tools and counseling support.
+                </div>
               </div>
               <div v-else class="facility-card-info">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 0.35rem;">
@@ -872,9 +1003,9 @@ const handleNavClick = (tab) => {
           </div>
 
           <!-- TAB 3: CHAT (Moderated Forums) -->
-          <div v-else-if="activeTab === 'chat'" style="display:flex; flex-direction:column; gap:0.5rem;">
+          <div v-else-if="activeTab === 'chat'" style="display:flex; flex-direction:column; gap:0.5rem; height: 535px; justify-content: space-between;">
             
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink: 0;">
               <div>
                 <h3 style="font-size: 0.75rem; text-transform:uppercase; color: var(--charcoal-600);">Moderated Chat Forums</h3>
                 <p style="font-size:0.55rem; color: var(--oxfam-green-dark); font-weight:700;">Community Lead: Oxfam Moderator</p>
@@ -885,7 +1016,7 @@ const handleNavClick = (tab) => {
             </div>
 
             <!-- Chat Threads View -->
-            <div class="forum-thread">
+            <div class="forum-thread" style="flex: 1; overflow-y: auto; margin-top: 0.4rem; margin-bottom: 0.4rem; max-height: 410px;">
               <div 
                 v-for="post in forumPosts" 
                 :key="post.id" 
@@ -906,20 +1037,19 @@ const handleNavClick = (tab) => {
                     <svg style="width:8px; height:8px;" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    IndexedDB Outbox Queue
+                    Queue
                   </span>
-                  <span v-else class="sync-status ok">
-                    <svg style="width:8px; height:8px;" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <span v-else class="sync-status ok" style="color: var(--oxfam-green-dark); display:flex; align-items:center;">
+                    <svg style="width:12px; height:12px;" fill="none" stroke="currentColor" stroke-width="4.5" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                     </svg>
-                    Synced to Metabase
                   </span>
                 </div>
               </div>
             </div>
 
-            <!-- Message Input console -->
-            <div style="display:flex; flex-direction:column; gap:2px;">
+            <!-- Message Input console at bottom of forum view -->
+            <div style="background-color: var(--charcoal-50); padding: 0.65rem 0.75rem; border: 1px solid var(--charcoal-200); border-radius: 12px; display:flex; flex-direction:column; gap:3px; flex-shrink: 0;">
               <div class="chat-input-row">
                 <input 
                   v-model="chatInput" 
@@ -934,8 +1064,8 @@ const handleNavClick = (tab) => {
                   </svg>
                 </button>
               </div>
-              <span style="font-size:0.55rem; color:var(--charcoal-600);">
-                Posts are securely filtered asynchronous to support safe environments.
+              <span style="font-size:0.55rem; color:var(--charcoal-600); text-align: left;">
+                Posts are securely filtered to support safe environments.
               </span>
             </div>
 

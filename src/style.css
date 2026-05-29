@@ -702,7 +702,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--charcoal-200);
   border-radius: 12px;
   padding: 0.75rem;
-  height: 250px;
+  height: auto;
   overflow-y: auto;
 }
 
@@ -997,7 +997,7 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (min-width: 1200px) {
   .bi-dashboard-card {
-    flex-basis: 720px;
+    flex-basis: 1180px;
     flex-shrink: 0;
   }
 }
@@ -1053,7 +1053,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .kpi-card span {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--charcoal-600);
@@ -1068,7 +1068,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .kpi-card p {
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   color: var(--charcoal-600);
 }
 
@@ -1077,7 +1077,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
 }
 
-/* Analytical Charts Simulation */
+/* Analytical Charts Simulation Grid - Row 1 (3 Columns) */
 .analytics-section {
   display: grid;
   grid-template-columns: 1fr;
@@ -1087,18 +1087,103 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (min-width: 768px) {
   .analytics-section {
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
+@media (min-width: 1024px) {
+  .analytics-section {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Analytical Charts Row 2 (2 Columns: Area line trend & Compliance Info) */
+.analytics-row-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .analytics-row-2 {
+    grid-template-columns: 1.7fr 1.3fr;
+  }
+}
+
+/* Donut SVG styling */
+.donut-svg circle {
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+}
+
+.legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  list-style: none;
+  width: 100%;
+}
+
+.legend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: transparent;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.legend-item:hover {
+  background-color: var(--charcoal-100);
+  border-color: var(--charcoal-200);
+}
+
+.legend-item.active {
+  background-color: var(--oxfam-green-light);
+  border-color: var(--oxfam-green-medium);
+  color: var(--oxfam-green-dark);
+}
+
+.legend-color-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.chart-point-group:hover .point-glow {
+  fill-opacity: 0.5;
+}
+
+.chart-point-group text {
+  transition: fill 0.2s;
+}
+
+.chart-point-group:hover text {
+  fill: var(--oxfam-green-dark);
+}
+
 .chart-card {
-  border: 1px solid var(--charcoal-100);
+  border: 1px solid var(--charcoal-200);
   border-radius: var(--border-radius-lg);
-  padding: 1rem;
-  background-color: var(--charcoal-50);
+  padding: 1.25rem;
+  background-color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.025);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
 }
 
 .chart-card h4 {
@@ -1157,10 +1242,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Incidents Table */
 .incidents-card {
-  border: 1px solid var(--charcoal-100);
+  border: 1px solid var(--charcoal-200);
   border-radius: var(--border-radius-lg);
-  padding: 1rem;
-  background-color: var(--charcoal-50);
+  padding: 1.25rem;
+  background-color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.025);
 }
 
 .incidents-card h4 {
@@ -1175,7 +1261,7 @@ h1, h2, h3, h4, h5, h6 {
 .incidents-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   text-align: left;
 }
 
@@ -1196,7 +1282,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .status-badge {
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 20px;
